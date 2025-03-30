@@ -129,3 +129,96 @@ class BookController {
         if ($book && $book['seller_id'] == $_SESSION['user_id']) {
             $this->bookModel->deleteBook($id);
         }
+        
+        header('Location: index.php?page=my_books');
+        exit;
+    }
+    
+    public function editMyBook($id) {
+        session_start();
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
+        $book = $this->bookModel->getBookById($id);
+        
+        if (!$book || $book['seller_id'] != $_SESSION['user_id']) {
+            header('Location: index.php?page=my_books');
+            exit;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'title' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['title']),
+                'author' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['author']),
+                'description' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['description']),
+                'price' => (float) $_POST['price'],
+                'genre' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['genre']),
+                'condition' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['condition'])
+            ];
+            
+            // Handle image upload
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+                $upload_dir = 'assets/images/books/';
+                
+                if (!file_exists($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+                
+                $file_name = time() . '_' . $_FILES['image']['name'];
+                $upload_path = $upload_dir . $file_name;
+                
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
+                    $data['image'] = 'books/' . $file_name;
+                }
+            }
+            
+            if ($this->bookModel->updateBook($id, $data)) {
+                header('Location: index.php?page=my_books');
+                exit;
+            } else {
+                $error = "Failed to update book";
+            }
+        }
+        
+        $genres = $this->bookModel->getGenres();
+        require_once 'views/user/edit_book.php';
+    }
+    
+    public function buyBook($id) {
+        session_start();
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
+        $book = $this->bookModel->getBookById($id);
+        
+        if (!$book || $book['status'] !== 'Available' || $book['seller_id'] == $_SESSION['user_id']) {
+            header('Location: index.php?page=book_details&id=' . $id);
+            exit;
+        }
+        
+        if ($this->bookModel->buyBook($id, $_SESSION['user_id'])) {
+            $success = true;
+        } else {
+            $error = "Failed to purchase book";
+        }
+        
+        require_once 'views/user/purchase_confirmation.php';
+    }
+    
+    public function purchaseHistory() {
+        session_start();
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
+        $purchases = $this->bookModel->getPurchaseHistory($_SESSION['user_id']);
+        
+        require_once 'views/user/purchase_history.php';
+    }
+}
+?>
