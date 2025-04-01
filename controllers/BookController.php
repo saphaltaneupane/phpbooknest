@@ -1,224 +1,95 @@
 <?php
-require_once 'models/Book.php';
-require_once 'models/Recommendation.php';
-
 class BookController {
-    private $bookModel;
-    private $recommendationModel;
-    
-    public function __construct($conn) {
-        $this->bookModel = new Book($conn);
-        $this->recommendationModel = new Recommendation($conn);
+    public function index() {
+        $books = Book::getAllBooks();
+        
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/books/index.php';
+        include 'views/layout/footer.php';
     }
     
-    public function listBooks() {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
+    public function view($id) {
+        if (!$id) {
+            header('Location: index.php?controller=book&action=index');
             exit;
         }
         
-        $books = $this->bookModel->getAllBooks();
-        $genres = $this->bookModel->getGenres();
-        
-        require_once 'views/user/books.php';
-    }
-    
-    public function searchBooks() {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
-        }
-        
-        $keyword = isset($_GET['keyword']) ? mysqli_real_escape_string($GLOBALS['conn'], $_GET['keyword']) : '';
-        $genre = isset($_GET['genre']) ? mysqli_real_escape_string($GLOBALS['conn'], $_GET['genre']) : '';
-        
-        $books = $this->bookModel->searchBooks($keyword, $genre);
-        $genres = $this->bookModel->getGenres();
-        
-        require_once 'views/user/search_books.php';
-    }
-    
-    public function bookDetails($id) {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
-        }
-        
-        $book = $this->bookModel->getBookById($id);
+        $book = Book::getBookById($id);
         
         if (!$book) {
-            header('Location: index.php?page=books');
+            // Book not found
+            header('Location: index.php?controller=book&action=index');
             exit;
         }
         
-        $similarBooks = $this->recommendationModel->getRecommendationsBasedOnBook($id, 4);
-        
-        require_once 'views/user/book_details.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/books/view.php';
+        include 'views/layout/footer.php';
     }
     
-    public function addUsedBook() {
-        session_start();
+    public function add() {
+        // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
+            header('Location: index.php?controller=user&action=login');
             exit;
         }
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = mysqli_real_escape_string($GLOBALS['conn'], $_POST['title']);
-            $author = mysqli_real_escape_string($GLOBALS['conn'], $_POST['author']);
-            $description = mysqli_real_escape_string($GLOBALS['conn'], $_POST['description']);
-            $price = (float) $_POST['price'];
-            $genre = mysqli_real_escape_string($GLOBALS['conn'], $_POST['genre']);
-            $condition = mysqli_real_escape_string($GLOBALS['conn'], $_POST['condition']);
+            $title = $_POST['title'] ?? '';
+            $author = $_POST['author'] ?? '';
+            $description = $_POST['description'] ?? '';
+            $price = $_POST['price'] ?? 0;
+            $condition = $_POST['condition'] ?? 'new';
+            $user_id = $_SESSION['user_id'];
             
-            // Handle image upload
-            $image = 'default_book.jpg';
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-                $upload_dir = 'assets/images/books/';
-                
-                if (!file_exists($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
-                
-                $file_name = time() . '_' . $_FILES['image']['name'];
-                $upload_path = $upload_dir . $file_name;
-                
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-                    $image = 'books/' . $file_name;
-                }
-            }
-            
-            $book_id = $this->bookModel->addBook($title, $author, $description, $price, $genre, $condition, $_SESSION['user_id'], true, $image);
-            
-            if ($book_id) {
-                header('Location: index.php?page=my_books');
+            if (Book::addBook($title, $author, $description, $price, $condition, $user_id)) {
+                // Book added successfully
+                header('Location: index.php?controller=book&action=index');
                 exit;
-            } else {
-                $error = "Failed to add book";
             }
         }
         
-        $genres = $this->bookModel->getGenres();
-        require_once 'views/user/add_used_book.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/books/add.php';
+        include 'views/layout/footer.php';
     }
     
-    public function myBooks() {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
-        }
+    public function search($query) {
+        $books = Book::searchBooks($query);
         
-        $books = $this->bookModel->getBooksByUserId($_SESSION['user_id']);
-        
-        require_once 'views/user/my_books.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/books/index.php';
+        include 'views/layout/footer.php';
     }
     
-    public function deleteMyBook($id) {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
+    public function filter($min, $max, $sort = 'asc') {
+        // Get all books
+        $allBooks = Book::getBooksForBST();
+        
+        // Create BST
+        $bst = new BookBST();
+        
+        // Insert all books into BST
+        foreach ($allBooks as $book) {
+            $bst->insert($book['price'], $book);
         }
         
-        $book = $this->bookModel->getBookById($id);
-        
-        if ($book && $book['seller_id'] == $_SESSION['user_id']) {
-            $this->bookModel->deleteBook($id);
-        }
-        
-        header('Location: index.php?page=my_books');
-        exit;
-    }
-    
-    public function editMyBook($id) {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
-        }
-        
-        $book = $this->bookModel->getBookById($id);
-        
-        if (!$book || $book['seller_id'] != $_SESSION['user_id']) {
-            header('Location: index.php?page=my_books');
-            exit;
-        }
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = [
-                'title' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['title']),
-                'author' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['author']),
-                'description' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['description']),
-                'price' => (float) $_POST['price'],
-                'genre' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['genre']),
-                'condition' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['condition'])
-            ];
-            
-            // Handle image upload
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-                $upload_dir = 'assets/images/books/';
-                
-                if (!file_exists($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
-                
-                $file_name = time() . '_' . $_FILES['image']['name'];
-                $upload_path = $upload_dir . $file_name;
-                
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-                    $data['image'] = 'books/' . $file_name;
-                }
-            }
-            
-            if ($this->bookModel->updateBook($id, $data)) {
-                header('Location: index.php?page=my_books');
-                exit;
-            } else {
-                $error = "Failed to update book";
-            }
-        }
-        
-        $genres = $this->bookModel->getGenres();
-        require_once 'views/user/edit_book.php';
-    }
-    
-    public function buyBook($id) {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
-        }
-        
-        $book = $this->bookModel->getBookById($id);
-        
-        if (!$book || $book['status'] !== 'Available' || $book['seller_id'] == $_SESSION['user_id']) {
-            header('Location: index.php?page=book_details&id=' . $id);
-            exit;
-        }
-        
-        if ($this->bookModel->buyBook($id, $_SESSION['user_id'])) {
-            $success = true;
+        // Filter books by price range
+        if ($min != 0 || $max != PHP_INT_MAX) {
+            $books = $bst->searchByPriceRange($min, $max);
         } else {
-            $error = "Failed to purchase book";
+            // Get all books with specified sorting
+            $books = $bst->inOrderTraversal($sort);
         }
         
-        require_once 'views/user/purchase_confirmation.php';
-    }
-    
-    public function purchaseHistory() {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
-        }
-        
-        $purchases = $this->bookModel->getPurchaseHistory($_SESSION['user_id']);
-        
-        require_once 'views/user/purchase_history.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/books/index.php';
+        include 'views/layout/footer.php';
     }
 }
 ?>

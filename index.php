@@ -1,46 +1,60 @@
 <?php
 session_start();
 
-// Include database connection
-require_once 'config/db_connect.php';
+// Define base path
+define('BASE_PATH', __DIR__);
 
-// Default controller and action
+// Application routes
 $controller = isset($_GET['controller']) ? $_GET['controller'] : 'book';
 $action = isset($_GET['action']) ? $_GET['action'] : 'index';
 
-// Check if user is logged in
-$isLoggedIn = isset($_SESSION['user_id']);
+// Include database configuration
+require_once 'config/database.php';
 
-// Routes that don't require authentication
-$publicRoutes = [
-    'user-login', 'user-register', 'book-index', 'book-search', 'book-details'
-];
+// Include models
+require_once 'models/User.php';
+require_once 'models/Book.php';
+require_once 'models/Order.php';
 
-// Check if the current route requires authentication
-$currentRoute = $controller . '-' . $action;
-if (!$isLoggedIn && !in_array($currentRoute, $publicRoutes) && $controller != 'user') {
-    // Redirect to login page
-    header('Location: index.php?controller=user&action=login');
-    exit();
-}
-
-// Admin routes check
-if ($controller == 'admin' && (!$isLoggedIn || $_SESSION['user_type'] != 'admin')) {
-    // Redirect non-admin users
-    header('Location: index.php?controller=user&action=login');
-    exit();
-}
+// Include the Binary Search Tree library
+require_once 'libs/BST.php';
 
 // Include controllers
-require_once 'controllers/UserController.php';
 require_once 'controllers/BookController.php';
+require_once 'controllers/UserController.php';
+require_once 'controllers/OrderController.php';
 require_once 'controllers/AdminController.php';
-require_once 'controllers/RecommendationController.php';
 
-// Route to appropriate controller
+// Route to the appropriate controller based on URL parameters
 switch ($controller) {
+    case 'book':
+        $bookController = new BookController();
+        
+        switch ($action) {
+            case 'index':
+                $bookController->index();
+                break;
+            case 'view':
+                $bookController->view($_GET['id'] ?? null);
+                break;
+            case 'add':
+                $bookController->add();
+                break;
+            case 'search':
+                $bookController->search($_GET['query'] ?? '');
+                break;
+            case 'filter':
+                $bookController->filter($_GET['min'] ?? 0, $_GET['max'] ?? PHP_INT_MAX, $_GET['sort'] ?? 'asc');
+                break;
+            default:
+                $bookController->index();
+                break;
+        }
+        break;
+        
     case 'user':
         $userController = new UserController();
+        
         switch ($action) {
             case 'login':
                 $userController->login();
@@ -51,92 +65,60 @@ switch ($controller) {
             case 'logout':
                 $userController->logout();
                 break;
-            case 'dashboard':
-                $userController->dashboard();
-                break;
-            case 'addUsedBook':
-                $userController->addUsedBook();
-                break;
-            case 'myBooks':
-                $userController->myBooks();
-                break;
-            case 'purchaseHistory':
-                $userController->purchaseHistory();
+            case 'profile':
+                $userController->profile();
                 break;
             default:
                 $userController->login();
                 break;
         }
         break;
-    
-    case 'book':
-        $bookController = new BookController();
+        
+    case 'order':
+        $orderController = new OrderController();
+        
         switch ($action) {
-            case 'index':
-                $bookController->index();
+            case 'checkout':
+                $orderController->checkout($_GET['book_id'] ?? null);
                 break;
-            case 'search':
-                $bookController->search();
+            case 'process':
+                $orderController->processOrder();
                 break;
-            case 'details':
-                $bookController->details();
+            case 'history':
+                $orderController->history();
                 break;
-            case 'buy':
-                $bookController->buy();
+            case 'khalti_verify':
+                $orderController->verifyKhaltiPayment();
                 break;
             default:
-                $bookController->index();
+                $orderController->history();
                 break;
         }
         break;
         
     case 'admin':
         $adminController = new AdminController();
+        
         switch ($action) {
             case 'dashboard':
                 $adminController->dashboard();
                 break;
-            case 'manageBooks':
+            case 'books':
                 $adminController->manageBooks();
                 break;
-            case 'manageUsers':
+            case 'users':
                 $adminController->manageUsers();
                 break;
-            case 'addBook':
-                $adminController->addBook();
-                break;
-            case 'editBook':
-                $adminController->editBook();
-                break;
-            case 'deleteBook':
-                $adminController->deleteBook();
-                break;
-            case 'editUser':
-                $adminController->editUser();
-                break;
-            case 'deleteUser':
-                $adminController->deleteUser();
+            case 'orders':
+                $adminController->manageOrders();
                 break;
             default:
                 $adminController->dashboard();
-                break;
-        }
-        break;
-        
-    case 'recommendation':
-        $recommendationController = new RecommendationController();
-        switch ($action) {
-            case 'getRecommendations':
-                $recommendationController->getRecommendations();
-                break;
-            default:
-                $recommendationController->getRecommendations();
                 break;
         }
         break;
         
     default:
-        // Default to book controller
         $bookController = new BookController();
         $bookController->index();
         break;

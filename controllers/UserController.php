@@ -1,123 +1,96 @@
 <?php
-require_once 'models/User.php';
-
 class UserController {
-    private $userModel;
-    
-    public function __construct($conn) {
-        $this->userModel = new User($conn);
-    }
-    
     public function login() {
+        $error = '';
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = mysqli_real_escape_string($GLOBALS['conn'], $_POST['username']);
-            $password = mysqli_real_escape_string($GLOBALS['conn'], $_POST['password']);
+            $username = $_POST['username'] ?? '';
+            $password = $_POST['password'] ?? '';
             
-            $user = $this->userModel->login($username, $password);
+            $user = User::login($username, $password);
             
             if ($user) {
-                session_start();
+                // Set session variables
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
-                $_SESSION['user_type'] = $user['user_type'];
+                $_SESSION['role'] = $user['role'];
                 
-                if ($user['user_type'] === 'admin') {
-                    header('Location: index.php?page=admin_dashboard');
+                // Redirect based on role
+                if ($user['role'] === 'admin') {
+                    header('Location: index.php?controller=admin&action=dashboard');
                 } else {
-                    header('Location: index.php?page=dashboard');
+                    header('Location: index.php?controller=book&action=index');
                 }
                 exit;
             } else {
-                return ['error' => 'Invalid username or password'];
+                $error = 'Invalid username or password';
             }
         }
         
-        require_once 'views/auth/login.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/users/login.php';
+        include 'views/layout/footer.php';
     }
     
     public function register() {
+        $error = '';
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = mysqli_real_escape_string($GLOBALS['conn'], $_POST['username']);
-            $email = mysqli_real_escape_string($GLOBALS['conn'], $_POST['email']);
-            $password = mysqli_real_escape_string($GLOBALS['conn'], $_POST['password']);
-            $full_name = mysqli_real_escape_string($GLOBALS['conn'], $_POST['full_name']);
-            $address = isset($_POST['address']) ? mysqli_real_escape_string($GLOBALS['conn'], $_POST['address']) : null;
-            $phone = isset($_POST['phone']) ? mysqli_real_escape_string($GLOBALS['conn'], $_POST['phone']) : null;
+            $username = $_POST['username'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $confirm_password = $_POST['confirm_password'] ?? '';
+            $email = $_POST['email'] ?? '';
             
-            $user_id = $this->userModel->register($username, $email, $password, $full_name, $address, $phone);
-            
-            if ($user_id) {
-                session_start();
-                $_SESSION['user_id'] = $user_id;
-                $_SESSION['username'] = $username;
-                $_SESSION['user_type'] = 'user';
-                
-                header('Location: index.php?page=dashboard');
-                exit;
+            // Validate input
+            if (empty($username) || empty($password) || empty($email)) {
+                $error = 'All fields are required';
+            } elseif ($password !== $confirm_password) {
+                $error = 'Passwords do not match';
+            } elseif (User::getUserByUsername($username)) {
+                $error = 'Username already exists';
             } else {
-                return ['error' => 'Registration failed. Username or email may already exist.'];
+                // Register user
+                if (User::register($username, $password, $email)) {
+                    // Redirect to login page
+                    header('Location: index.php?controller=user&action=login');
+                    exit;
+                } else {
+                    $error = 'Registration failed';
+                }
             }
         }
         
-        require_once 'views/auth/register.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/users/register.php';
+        include 'views/layout/footer.php';
     }
     
     public function logout() {
-        session_start();
+        // Destroy session
         session_destroy();
+        
+        // Redirect to home page
         header('Location: index.php');
         exit;
     }
     
-    public function dashboard() {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
-        }
-        
-        require_once 'models/Book.php';
-        require_once 'models/Recommendation.php';
-        
-        $bookModel = new Book($GLOBALS['conn']);
-        $recommendationModel = new Recommendation($GLOBALS['conn']);
-        
-        $books = $bookModel->getAllBooks(8);
-        $recommendations = $recommendationModel->getRecommendationsForUser($_SESSION['user_id']);
-        
-        require_once 'views/user/dashboard.php';
-    }
-    
     public function profile() {
-        session_start();
+        // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
+            header('Location: index.php?controller=user&action=login');
             exit;
         }
         
-        $user = $this->userModel->getUserById($_SESSION['user_id']);
+        $user = User::getUserById($_SESSION['user_id']);
+        $books = Book::getBooksByUser($_SESSION['user_id']);
+        $orders = Order::getOrdersByUser($_SESSION['user_id']);
         
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = [
-                'full_name' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['full_name']),
-                'email' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['email']),
-                'address' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['address']),
-                'phone' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['phone'])
-            ];
-            
-            if (!empty($_POST['password'])) {
-                $data['password'] = mysqli_real_escape_string($GLOBALS['conn'], $_POST['password']);
-            }
-            
-            if ($this->userModel->updateUser($_SESSION['user_id'], $data)) {
-                $user = $this->userModel->getUserById($_SESSION['user_id']);
-                $success = "Profile updated successfully";
-            } else {
-                $error = "Failed to update profile";
-            }
-        }
-        
-        require_once 'views/user/profile.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/users/profile.php';
+        include 'views/layout/footer.php';
     }
 }
 ?>

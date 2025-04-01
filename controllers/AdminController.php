@@ -1,178 +1,115 @@
 <?php
-require_once 'models/User.php';
-require_once 'models/Book.php';
-
 class AdminController {
-    private $userModel;
-    private $bookModel;
-    
-    public function __construct($conn) {
-        $this->userModel = new User($conn);
-        $this->bookModel = new Book($conn);
+    // Check if user is admin
+    private function checkAdmin() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: index.php?controller=user&action=login');
+            exit;
+        }
     }
     
     public function dashboard() {
-        session_start();
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-            header('Location: index.php?page=login');
-            exit;
-        }
+        $this->checkAdmin();
         
-        $totalUsers = count($this->userModel->getAllUsers());
-        $totalBooks = count($this->bookModel->getAllAdminBooks());
+        $users = User::getAllUsers();
+        $books = Book::getAllBooks();
+        $orders = Order::getAllOrders();
         
-        require_once 'views/admin/dashboard.php';
-    }
-    
-    public function manageUsers() {
-        session_start();
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-            header('Location: index.php?page=login');
-            exit;
-        }
-        
-        $users = $this->userModel->getAllUsers();
-        
-        require_once 'views/admin/manage_users.php';
-    }
-    
-    public function deleteUser($id) {
-        session_start();
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-            header('Location: index.php?page=login');
-            exit;
-        }
-        
-        if ($id != $_SESSION['user_id']) {  // Prevent admin from deleting themselves
-            $this->userModel->deleteUser($id);
-        }
-        
-        header('Location: index.php?page=admin_manage_users');
-        exit;
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/admin/dashboard.php';
+        include 'views/layout/footer.php';
     }
     
     public function manageBooks() {
-        session_start();
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-            header('Location: index.php?page=login');
+        $this->checkAdmin();
+        
+        $books = Book::getAllBooks();
+        
+        // Handle book status update
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_id']) && isset($_POST['status'])) {
+            $book_id = $_POST['book_id'];
+            $status = $_POST['status'];
+            
+            Book::updateBookStatus($book_id, $status);
+            
+            // Redirect to refresh page
+            header('Location: index.php?controller=admin&action=books');
             exit;
         }
         
-        $books = $this->bookModel->getAllAdminBooks();
+        // Handle book deletion
+        if (isset($_GET['delete_book'])) {
+            $book_id = $_GET['delete_book'];
+            
+            Book::deleteBook($book_id);
+            
+            // Redirect to refresh page
+            header('Location: index.php?controller=admin&action=books');
+            exit;
+        }
         
-        require_once 'views/admin/manage_books.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/admin/books.php';
+        include 'views/layout/footer.php';
     }
     
-    public function addBook() {
-        session_start();
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-            header('Location: index.php?page=login');
+    public function manageUsers() {
+        $this->checkAdmin();
+        
+        $users = User::getAllUsers();
+        
+        // Handle user role update
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id']) && isset($_POST['role'])) {
+            $user_id = $_POST['user_id'];
+            $role = $_POST['role'];
+            
+            User::updateUserRole($user_id, $role);
+            
+            // Redirect to refresh page
+            header('Location: index.php?controller=admin&action=users');
             exit;
         }
         
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = mysqli_real_escape_string($GLOBALS['conn'], $_POST['title']);
-            $author = mysqli_real_escape_string($GLOBALS['conn'], $_POST['author']);
-            $description = mysqli_real_escape_string($GLOBALS['conn'], $_POST['description']);
-            $price = (float) $_POST['price'];
-            $genre = mysqli_real_escape_string($GLOBALS['conn'], $_POST['genre']);
-            $condition = mysqli_real_escape_string($GLOBALS['conn'], $_POST['condition']);
+        // Handle user deletion
+        if (isset($_GET['delete_user'])) {
+            $user_id = $_GET['delete_user'];
             
-            // Handle image upload
-            $image = 'default_book.jpg';
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-                $upload_dir = 'assets/images/books/';
-                
-                if (!file_exists($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
-                
-                $file_name = time() . '_' . $_FILES['image']['name'];
-                $upload_path = $upload_dir . $file_name;
-                
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-                    $image = 'books/' . $file_name;
-                }
-            }
+            User::deleteUser($user_id);
             
-            $book_id = $this->bookModel->addBook($title, $author, $description, $price, $genre, $condition, $_SESSION['user_id'], false, $image);
-            
-            if ($book_id) {
-                header('Location: index.php?page=admin_manage_books');
-                exit;
-            } else {
-                $error = "Failed to add book";
-            }
+            // Redirect to refresh page
+            header('Location: index.php?controller=admin&action=users');
+            exit;
         }
         
-        $genres = $this->bookModel->getGenres();
-        require_once 'views/admin/add_book.php';
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/admin/users.php';
+        include 'views/layout/footer.php';
     }
     
-    public function editBook($id) {
-        session_start();
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-            header('Location: index.php?page=login');
-            exit;
-        }
+    public function manageOrders() {
+        $this->checkAdmin();
         
-        $book = $this->bookModel->getBookById($id);
+        $orders = Order::getAllOrders();
         
-        if (!$book) {
-            header('Location: index.php?page=admin_manage_books');
-            exit;
-        }
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = [
-                'title' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['title']),
-                'author' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['author']),
-                'description' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['description']),
-                'price' => (float) $_POST['price'],
-                'genre' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['genre']),
-                'condition' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['condition']),
-                'status' => mysqli_real_escape_string($GLOBALS['conn'], $_POST['status'])
-            ];
+        // Handle order status update
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset($_POST['status'])) {
+            $order_id = $_POST['order_id'];
+            $status = $_POST['status'];
             
-            // Handle image upload
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-                $upload_dir = 'assets/images/books/';
-                
-                if (!file_exists($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
-                
-                $file_name = time() . '_' . $_FILES['image']['name'];
-                $upload_path = $upload_dir . $file_name;
-                
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-                    $data['image'] = 'books/' . $file_name;
-                }
-            }
+            Order::updateOrderStatus($order_id, $status);
             
-            if ($this->bookModel->updateBook($id, $data)) {
-                header('Location: index.php?page=admin_manage_books');
-                exit;
-            } else {
-                $error = "Failed to update book";
-            }
-        }
-        
-        $genres = $this->bookModel->getGenres();
-        require_once 'views/admin/edit_book.php';
-    }
-    
-    public function deleteBook($id) {
-        session_start();
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-            header('Location: index.php?page=login');
+            // Redirect to refresh page
+            header('Location: index.php?controller=admin&action=orders');
             exit;
         }
         
-        $this->bookModel->deleteBook($id);
-        
-        header('Location: index.php?page=admin_manage_books');
-        exit;
+        // Load the view
+        include 'views/layout/header.php';
+        include 'views/admin/orders.php';
+        include 'views/layout/footer.php';
     }
 }
 ?>
