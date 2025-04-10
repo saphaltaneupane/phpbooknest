@@ -1,126 +1,97 @@
 <?php
-session_start();
+require_once 'includes/header.php';
 
-// Define base path
-define('BASE_PATH', __DIR__);
+// Get available books
+$books = getAvailableBooks();
 
-// Application routes
-$controller = isset($_GET['controller']) ? $_GET['controller'] : 'book';
-$action = isset($_GET['action']) ? $_GET['action'] : 'index';
-
-// Include database configuration
-require_once 'config/database.php';
-
-// Include models
-require_once 'models/User.php';
-require_once 'models/Book.php';
-require_once 'models/Order.php';
-
-// Include the Binary Search Tree library
-require_once 'libs/BST.php';
-
-// Include controllers
-require_once 'controllers/BookController.php';
-require_once 'controllers/UserController.php';
-require_once 'controllers/OrderController.php';
-require_once 'controllers/AdminController.php';
-
-// Route to the appropriate controller based on URL parameters
-switch ($controller) {
-    case 'book':
-        $bookController = new BookController();
-        
-        switch ($action) {
-            case 'index':
-                $bookController->index();
-                break;
-            case 'view':
-                $bookController->view($_GET['id'] ?? null);
-                break;
-            case 'add':
-                $bookController->add();
-                break;
-            case 'search':
-                $bookController->search($_GET['query'] ?? '');
-                break;
-            case 'filter':
-                $bookController->filter($_GET['min'] ?? 0, $_GET['max'] ?? PHP_INT_MAX, $_GET['sort'] ?? 'asc');
-                break;
-            default:
-                $bookController->index();
-                break;
-        }
-        break;
-        
-    case 'user':
-        $userController = new UserController();
-        
-        switch ($action) {
-            case 'login':
-                $userController->login();
-                break;
-            case 'register':
-                $userController->register();
-                break;
-            case 'logout':
-                $userController->logout();
-                break;
-            case 'profile':
-                $userController->profile();
-                break;
-            default:
-                $userController->login();
-                break;
-        }
-        break;
-        
-    case 'order':
-        $orderController = new OrderController();
-        
-        switch ($action) {
-            case 'checkout':
-                $orderController->checkout($_GET['book_id'] ?? null);
-                break;
-            case 'process':
-                $orderController->processOrder();
-                break;
-            case 'history':
-                $orderController->history();
-                break;
-            case 'khalti_verify':
-                $orderController->verifyKhaltiPayment();
-                break;
-            default:
-                $orderController->history();
-                break;
-        }
-        break;
-        
-    case 'admin':
-        $adminController = new AdminController();
-        
-        switch ($action) {
-            case 'dashboard':
-                $adminController->dashboard();
-                break;
-            case 'books':
-                $adminController->manageBooks();
-                break;
-            case 'users':
-                $adminController->manageUsers();
-                break;
-            case 'orders':
-                $adminController->manageOrders();
-                break;
-            default:
-                $adminController->dashboard();
-                break;
-        }
-        break;
-        
-    default:
-        $bookController = new BookController();
-        $bookController->index();
-        break;
-}
+// Get top rated books for recommendation
+$recommendedBooks = getTopRatedBooks(4);
 ?>
+
+<div class="jumbotron bg-light p-4 rounded mb-4">
+    <h1 class="display-5">Welcome to Online Book Trading System</h1>
+    <p class="lead">Discover, buy, and sell books with ease.</p>
+    <?php if (!isLoggedIn()): ?>
+        <a href="register.php" class="btn btn-primary">Sign Up Now</a>
+    <?php endif; ?>
+</div>
+
+<!-- Recommended Books Section -->
+<?php if (!empty($recommendedBooks)): ?>
+<section class="mb-5">
+    <h2 class="mb-4">Recommended Books</h2>
+    <div class="row">
+        <?php foreach ($recommendedBooks as $book): ?>
+            <div class="col-md-3 mb-4">
+                <div class="card book-card h-100">
+                    <img src="assets/images/<?php echo $book['image']; ?>" class="card-img-top book-image" alt="<?php echo $book['title']; ?>">
+                    <div class="card-body">
+                        <h5 class="card-title"><?php echo $book['title']; ?></h5>
+                        <p class="card-text book-author">by <?php echo $book['author']; ?></p>
+                        <p class="card-text rating">
+                            <?php 
+                            $avgRating = $book['avg_rating'];
+                            for ($i = 1; $i <= 5; $i++) {
+                                if ($i <= $avgRating) {
+                                    echo '<i class="fas fa-star"></i>';
+                                } else if ($i <= $avgRating + 0.5) {
+                                    echo '<i class="fas fa-star-half-alt"></i>';
+                                } else {
+                                    echo '<i class="far fa-star"></i>';
+                                }
+                            }
+                            echo " (" . round($avgRating, 1) . ")";
+                            ?>
+                        </p>
+                        <p class="card-text book-price">Rs. <?php echo $book['price']; ?></p>
+                        <a href="book_details.php?id=<?php echo $book['id']; ?>" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
+
+<!-- All Available Books -->
+<section>
+    <h2 class="mb-4">Available Books</h2>
+    <div class="row">
+        <?php if (empty($books)): ?>
+            <div class="col-12">
+                <p>No books available at the moment.</p>
+            </div>
+        <?php else: ?>
+            <?php foreach ($books as $book): ?>
+                <div class="col-md-3 mb-4">
+                    <div class="card book-card h-100">
+                        <img src="assets/images/<?php echo $book['image']; ?>" class="card-img-top book-image" alt="<?php echo $book['title']; ?>">
+                        <div class="card-body">
+                            <h5 class="card-title"><?php echo $book['title']; ?></h5>
+                            <p class="card-text book-author">by <?php echo $book['author']; ?></p>
+                            <p class="card-text rating">
+                                <?php 
+                                $rating = getBookRating($book['id']);
+                                for ($i = 1; $i <= 5; $i++) {
+                                    if ($i <= $rating) {
+                                        echo '<i class="fas fa-star"></i>';
+                                    } else if ($i <= $rating + 0.5) {
+                                        echo '<i class="fas fa-star-half-alt"></i>';
+                                    } else {
+                                        echo '<i class="far fa-star"></i>';
+                                    }
+                                }
+                                echo " (" . $rating . ")";
+                                ?>
+                            </p>
+                            <p class="card-text book-price">Rs. <?php echo $book['price']; ?></p>
+                            <a href="book_details.php?id=<?php echo $book['id']; ?>" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+</section>
+
+<?php require_once 'includes/footer.php'; ?>
