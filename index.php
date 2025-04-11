@@ -8,12 +8,14 @@ $books = getAvailableBooks();
 $recommendedBooks = getTopRatedBooks(4);
 ?>
 
-<div class="jumbotron bg-light p-4 rounded mb-4">
-    <h1 class="display-5">Welcome to Online Book Trading System</h1>
-    <p class="lead">Discover, buy, and sell books with ease.</p>
-    <?php if (!isLoggedIn()): ?>
-        <a href="register.php" class="btn btn-primary">Sign Up Now</a>
-    <?php endif; ?>
+<div class="jumbotron bg-light p-4 rounded mb-4" style="background: url('assets/images/banner.jpg') no-repeat center center; background-size: cover; color: white; position: relative;">
+    <div class="container text-center" style="background-color: rgba(0, 0, 0, 0.6); padding: 20px; border-radius: 10px;">
+        <h1 class="display-4">Welcome to Online Book Trading System</h1>
+        <p class="lead">Discover, buy, and sell books with ease.</p>
+        <?php if (!isLoggedIn()): ?>
+            <a href="register.php" class="btn btn-primary btn-lg">Sign Up Now</a>
+        <?php endif; ?>
+    </div>
 </div>
 
 <!-- Recommended Books Section -->

@@ -60,6 +60,81 @@ body {
     margin-bottom: 20px;
 }
 
+/* Admin Dashboard Styles */
+.admin-dashboard {
+    color: white;
+}
+
+/* Orders Table Styles */
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.table,
+.table td,
+.table th,
+.table tr {
+    color: white !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) td {
+    color: white !important;
+}
+
+.table th {
+    background-color: #5D5CDE;
+    color: white;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-top: 1px solid #dee2e6;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(93, 92, 222, 0.05);
+}
+
+.table-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #dee2e6;
+}
+
+/* Modal styles */
+.modal-content {
+    background-color: white !important;
+    color: black !important;
+}
+
+.modal .table {
+    margin-bottom: 0;
+    color: black !important;
+}
+
+.modal .table th {
+    background-color: #6c757d;
+    color: white !important;
+}
+
+.modal .table td {
+    color: black !important;
+}
+
+.modal-header,
+.modal-footer {
+    border-color: #dee2e6;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
     body {

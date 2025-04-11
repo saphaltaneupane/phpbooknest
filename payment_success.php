@@ -27,6 +27,16 @@ $items = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $items[] = $row;
 }
+
+// Display verification result for debugging (remove in production)
+$debugInfo = '';
+if (isset($_SESSION['verification_result']) && isAdmin()) {
+    $debugInfo = '<div class="alert alert-info">
+        <h5>Debug Info (Admin Only):</h5>
+        <pre>' . print_r($_SESSION['verification_result'], true) . '</pre>
+    </div>';
+    unset($_SESSION['verification_result']);
+}
 ?>
 
 <div class="row">
@@ -47,6 +57,10 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <div class="alert alert-danger"><?php echo $message; ?></div>
                 <?php endif; ?>
                 
+                <?php if (isAdmin()): ?>
+                    <?php echo $debugInfo; ?>
+                <?php endif; ?>
+                
                 <?php if ($status === 'success'): ?>
                     <div class="text-center mb-4">
                         <i class="fas fa-check-circle text-success" style="font-size: 60px;"></i>
@@ -60,6 +74,9 @@ while ($row = mysqli_fetch_assoc($result)) {
                         <p><strong>Payment Method:</strong> <?php echo ucfirst($order['payment_method']); ?></p>
                         <p><strong>Payment Status:</strong> <?php echo ucfirst($order['payment_status']); ?></p>
                         <p><strong>Total Amount:</strong> Rs. <?php echo $order['total_amount']; ?></p>
+                        <?php if (!empty($order['transaction_id'])): ?>
+                            <p><strong>Transaction ID:</strong> <?php echo $order['transaction_id']; ?></p>
+                        <?php endif; ?>
                     </div>
                     
                     <div class="mb-4">

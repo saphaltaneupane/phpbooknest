@@ -57,24 +57,36 @@ function getBookById($bookId) {
 // Function to get top rated books (using priority queue concept)
 function getTopRatedBooks($limit = 5) {
     global $conn;
-    
-    // Get books with average rating >= 4
+
+    // Query to fetch books with their average rating and rating count
     $query = "SELECT books.*, AVG(ratings.rating) as avg_rating, COUNT(ratings.id) as rating_count 
               FROM books 
               JOIN ratings ON books.id = ratings.book_id 
               WHERE books.status = 'available' 
-              GROUP BY books.id 
-              HAVING avg_rating >= 4 
-              ORDER BY avg_rating DESC, rating_count DESC 
-              LIMIT $limit";
-    
+              GROUP BY books.id
+              HAVING avg_rating >= 4"; // Exclude books with avg_rating below 4
+
     $result = mysqli_query($conn, $query);
-    $books = [];
-    
+
+    // Use SplPriorityQueue to store books based on avg_rating and rating_count
+    $priorityQueue = new SplPriorityQueue();
+
     while ($row = mysqli_fetch_assoc($result)) {
-        $books[] = $row;
+        // Use avg_rating as the primary priority and rating_count as the secondary priority
+        $priority = [$row['avg_rating'], $row['rating_count']];
+        $priorityQueue->insert($row, $priority);
     }
-    
+
+    // Extract top-rated books
+    $priorityQueue->setExtractFlags(SplPriorityQueue::EXTR_DATA);
+    $books = [];
+    $count = 0;
+
+    while (!$priorityQueue->isEmpty() && $count < $limit) {
+        $books[] = $priorityQueue->extract();
+        $count++;
+    }
+
     return $books;
 }
 

@@ -18,22 +18,27 @@ if (isLoggedIn() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ratin
     $userId = $_SESSION['user_id'];
     $rating = (int)$_POST['rating'];
     $review = sanitize($_POST['review']);
-    
-    // Check if user already rated this book
-    $checkQuery = "SELECT * FROM ratings WHERE user_id = $userId AND book_id = $bookId";
-    $checkResult = mysqli_query($conn, $checkQuery);
-    
-    if (mysqli_num_rows($checkResult) > 0) {
-        // Update existing rating
-        $updateQuery = "UPDATE ratings SET rating = $rating, review = '$review' WHERE user_id = $userId AND book_id = $bookId";
-        mysqli_query($conn, $updateQuery);
+
+    // Ensure both rating and review are provided
+    if (empty($rating) || empty($review)) {
+        $error = "Both rating and review are required.";
     } else {
-        // Insert new rating
-        $insertQuery = "INSERT INTO ratings (user_id, book_id, rating, review) VALUES ($userId, $bookId, $rating, '$review')";
-        mysqli_query($conn, $insertQuery);
+        // Check if user already rated this book
+        $checkQuery = "SELECT * FROM ratings WHERE user_id = $userId AND book_id = $bookId";
+        $checkResult = mysqli_query($conn, $checkQuery);
+
+        if (mysqli_num_rows($checkResult) > 0) {
+            // Update existing rating
+            $updateQuery = "UPDATE ratings SET rating = $rating, review = '$review' WHERE user_id = $userId AND book_id = $bookId";
+            mysqli_query($conn, $updateQuery);
+        } else {
+            // Insert new rating
+            $insertQuery = "INSERT INTO ratings (user_id, book_id, rating, review) VALUES ($userId, $bookId, $rating, '$review')";
+            mysqli_query($conn, $insertQuery);
+        }
+
+        $ratingSubmitted = true;
     }
-    
-    $ratingSubmitted = true;
 }
 
 // Get book ratings and reviews
@@ -106,6 +111,8 @@ $avgRating = getBookRating($bookId);
                 <div class="card-body">
                     <?php if ($ratingSubmitted): ?>
                         <div class="alert alert-success">Your review has been submitted!</div>
+                    <?php elseif (isset($error)): ?>
+                        <div class="alert alert-danger"><?php echo $error; ?></div>
                     <?php endif; ?>
                     
                     <form action="book_details.php?id=<?php echo $bookId; ?>" method="POST">
@@ -136,7 +143,7 @@ $avgRating = getBookRating($bookId);
                         </div>
                         <div class="mb-3">
                             <label for="review" class="form-label">Review</label>
-                            <textarea class="form-control" id="review" name="review" rows="3"></textarea>
+                            <textarea class="form-control" id="review" name="review" rows="3" required></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Submit Review</button>
                     </form>

@@ -14,11 +14,24 @@ $userId = $_SESSION['user_id'];
 // Get user details
 $user = getUserById($userId);
 
-// Get user's orders
-$orders = getUserOrders($userId);
+// Get books sold by the user
+$soldBooks = [];
+$query = "SELECT b.*, o.created_at as sold_date FROM books b 
+          JOIN order_items oi ON b.id = oi.book_id 
+          JOIN orders o ON oi.order_id = o.id 
+          WHERE b.added_by = $userId AND b.status = 'sold'";
+$result = mysqli_query($conn, $query);
+while ($row = mysqli_fetch_assoc($result)) {
+    $soldBooks[] = $row;
+}
 
-// Get recommended books
-$recommendedBooks = getTopRatedBooks(4);
+// Get books sent for selling by the user
+$sentBooks = [];
+$query = "SELECT * FROM books WHERE added_by = $userId AND status IN ('pending', 'submitted')";
+$result = mysqli_query($conn, $query);
+while ($row = mysqli_fetch_assoc($result)) {
+    $sentBooks[] = $row;
+}
 ?>
 
 <div class="row">
@@ -48,74 +61,71 @@ $recommendedBooks = getTopRatedBooks(4);
     </div>
     
     <div class="col-md-9">
+        <!-- Books Sent for Selling Section -->
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                Recent Orders
+                Books Sent for Selling
             </div>
             <div class="card-body">
-                <?php if (empty($orders)): ?>
-                    <p>You haven't placed any orders yet.</p>
+                <?php if (empty($sentBooks)): ?>
+                    <p>You haven't sent any books for selling yet.</p>
                 <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table">
+                        <table class="table table-striped table-bordered">
                             <thead>
                                 <tr>
-                                    <th>Order ID</th>
-                                    <th>Date</th>
-                                    <th>Amount</th>
-                                    <th>Payment</th>
-                                    <th>Status</th>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Price</th>
+                                    <th>Submitted Date</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach (array_slice($orders, 0, 5) as $order): ?>
+                                <?php foreach ($sentBooks as $book): ?>
                                     <tr>
-                                        <td>#<?php echo $order['id']; ?></td>
-                                        <td><?php echo date('M d, Y', strtotime($order['created_at'])); ?></td>
-                                        <td>Rs. <?php echo $order['total_amount']; ?></td>
-                                        <td><?php echo ucfirst($order['payment_method']); ?></td>
-                                        <td>
-                                            <span class="badge bg-<?php echo $order['status'] === 'completed' ? 'success' : ($order['status'] === 'pending' ? 'warning' : 'info'); ?>">
-                                                <?php echo ucfirst($order['status']); ?>
-                                            </span>
-                                        </td>
+                                        <td><?php echo $book['title']; ?></td>
+                                        <td><?php echo $book['author']; ?></td>
+                                        <td>Rs. <?php echo number_format($book['price'], 2); ?></td>
+                                        <td><?php echo date('M d, Y', strtotime($book['created_at'])); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
-                    
-                    <?php if (count($orders) > 5): ?>
-                        <div class="text-center mt-3">
-                            <a href="orders.php" class="btn btn-outline-primary btn-sm">View All Orders</a>
-                        </div>
-                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>
         
-        <!-- Recommended Books Section -->
-        <div class="card">
+        <!-- Books Sold Section -->
+        <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                Recommended For You
+                Books Sold
             </div>
             <div class="card-body">
-                <?php if (empty($recommendedBooks)): ?>
-                    <p>No book recommendations available.</p>
+                <?php if (empty($soldBooks)): ?>
+                    <p>You haven't sold any books yet.</p>
                 <?php else: ?>
-                    <div class="row">
-                        <?php foreach ($recommendedBooks as $book): ?>
-                            <div class="col-md-3 mb-3">
-                                <div class="card book-card h-100">
-                                    <img src="<?php echo $relativePath; ?>assets/images/<?php echo $book['image']; ?>" class="card-img-top book-image" alt="<?php echo $book['title']; ?>">
-                                    <div class="card-body">
-                                        <h6 class="card-title"><?php echo $book['title']; ?></h6>
-                                        <p class="card-text book-price">Rs. <?php echo $book['price']; ?></p>
-                                        <a href="<?php echo $relativePath; ?>book_details.php?id=<?php echo $book['id']; ?>" class="btn btn-primary btn-sm">View</a>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Price</th>
+                                    <th>Sold Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($soldBooks as $book): ?>
+                                    <tr>
+                                        <td><?php echo $book['title']; ?></td>
+                                        <td><?php echo $book['author']; ?></td>
+                                        <td>Rs. <?php echo number_format($book['price'], 2); ?></td>
+                                        <td><?php echo date('M d, Y', strtotime($book['sold_date'])); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                 <?php endif; ?>
             </div>
