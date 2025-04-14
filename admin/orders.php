@@ -30,32 +30,54 @@ while ($row = mysqli_fetch_assoc($result)) {
     $orders[] = $row;
 }
 
-// Handle order status update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset($_POST['status'])) {
+// Handle form submission for status updates
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
     $orderId = (int)$_POST['order_id'];
-    $status = sanitize($_POST['status']);
+    $updated = false;
+    $errorMsg = '';
     
-    $query = "UPDATE orders SET status = '$status' WHERE id = $orderId";
-    if (mysqli_query($conn, $query)) {
-        $_SESSION['success_message'] = 'Order status updated successfully!';
-        redirect('orders.php');
-    } else {
-        $error = 'Error updating order status: ' . mysqli_error($conn);
+    // Update order status if provided
+    if (isset($_POST['status'])) {
+        $status = sanitize($_POST['status']);
+        $query = "UPDATE orders SET status = '$status' WHERE id = $orderId";
+        
+        if (mysqli_query($conn, $query)) {
+            $updated = true;
+            // Update book status to 'sold' if order status is 'completed'
+            if ($status === 'completed') {
+                updateBookStatusToSold($orderId);
+            }
+        } else {
+            $errorMsg .= 'Error updating order status: ' . mysqli_error($conn) . '<br>';
+        }
     }
-}
-
-// Handle payment status update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset($_POST['payment_status'])) {
-    $orderId = (int)$_POST['order_id'];
-    $paymentStatus = sanitize($_POST['payment_status']);
     
-    $query = "UPDATE orders SET payment_status = '$paymentStatus' WHERE id = $orderId";
-    if (mysqli_query($conn, $query)) {
-        $_SESSION['success_message'] = 'Payment status updated successfully!';
-        redirect('orders.php');
-    } else {
-        $error = 'Error updating payment status: ' . mysqli_error($conn);
+    // Update payment status if provided
+    if (isset($_POST['payment_status'])) {
+        $paymentMethod = sanitize($_POST['payment_method']);
+        $paymentStatus = sanitize($_POST['payment_status']);
+        
+        // Only update if payment method is not Khalti
+        if ($paymentMethod !== 'khalti') {
+            $query = "UPDATE orders SET payment_status = '$paymentStatus' WHERE id = $orderId";
+            
+            if (mysqli_query($conn, $query)) {
+                $updated = true;
+            } else {
+                $errorMsg .= 'Error updating payment status: ' . mysqli_error($conn);
+            }
+        }
     }
+    
+    // Set session messages
+    if ($updated) {
+        $_SESSION['success_message'] = 'Order information updated successfully!';
+    } else if (!empty($errorMsg)) {
+        $_SESSION['error_message'] = $errorMsg;
+    }
+    
+    // Redirect to refresh the page
+    redirect('orders.php' . ($page > 1 ? "?page=$page" : ''));
 }
 ?>
 
@@ -87,8 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset(
                         <?php unset($_SESSION['success_message']); ?>
                     <?php endif; ?>
                     
-                    <?php if (isset($error)): ?>
-                        <div class="alert alert-danger"><?php echo $error; ?></div>
+                    <?php if (isset($_SESSION['error_message'])): ?>
+                        <div class="alert alert-danger"><?php echo $_SESSION['error_message']; ?></div>
+                        <?php unset($_SESSION['error_message']); ?>
                     <?php endif; ?>
                     
                     <?php if (empty($orders)): ?>
@@ -222,17 +245,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset(
                         <p><strong>Transaction ID:</strong> <?php echo htmlspecialchars($order['transaction_id']); ?></p>
                     <?php endif; ?>
                     
-                    <form action="orders.php" method="POST" class="mt-4">
+                    <form action="orders.php<?php echo $page > 1 ? "?page=$page" : ''; ?>" method="POST" class="mt-4">
                         <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                        <input type="hidden" name="payment_method" value="<?php echo $order['payment_method']; ?>">
                         
                         <!-- Update Payment Status -->
                         <div class="mb-3">
                             <label for="paymentStatus<?php echo $order['id']; ?>" class="form-label">Update Payment Status</label>
-                            <select class="form-select" id="paymentStatus<?php echo $order['id']; ?>" name="payment_status">
-                                <option value="pending" <?php echo $order['payment_status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                <option value="completed" <?php echo $order['payment_status'] === 'completed' ? 'selected' : ''; ?>>Completed</option>
-                                <option value="failed" <?php echo $order['payment_status'] === 'failed' ? 'selected' : ''; ?>>Failed</option>
-                            </select>
+                            <?php if ($order['payment_method'] === 'khalti'): ?>
+                                <select class="form-select" id="paymentStatus<?php echo $order['id']; ?>" name="payment_status" disabled>
+                                    <option value="<?php echo $order['payment_status']; ?>" selected><?php echo ucfirst($order['payment_status']); ?> (Khalti payments cannot be modified)</option>
+                                </select>
+                                <small class="text-muted">Payment status for Khalti transactions cannot be modified</small>
+                            <?php else: ?>
+                                <select class="form-select" id="paymentStatus<?php echo $order['id']; ?>" name="payment_status">
+                                    <option value="pending" <?php echo $order['payment_status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                    <option value="completed" <?php echo $order['payment_status'] === 'completed' ? 'selected' : ''; ?>>Completed</option>
+                                    <option value="failed" <?php echo $order['payment_status'] === 'failed' ? 'selected' : ''; ?>>Failed</option>
+                                </select>
+                            <?php endif; ?>
                         </div>
                         
                         <!-- Update Order Status -->

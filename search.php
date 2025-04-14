@@ -1,22 +1,35 @@
 <?php
-require_once 'includes/header.php';
+require_once 'config/db.php';
+require_once 'includes/functions.php';
 
-$keyword = isset($_GET['keyword']) ? sanitize($_GET['keyword']) : '';
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Get search results
 $books = [];
-
-if (!empty($keyword)) {
+if (isset($_GET['keyword']) && !empty(trim($_GET['keyword']))) {
+    $keyword = trim($_GET['keyword']);
     $books = searchBooks($keyword);
 }
 ?>
-
-<div class="row">
-    <div class="col-12">
-        <h2>Search Results for "<?php echo $keyword; ?>"</h2>
-        
-        <?php if (empty($books)): ?>
-            <div class="alert alert-info">No books found matching your search.</div>
-        <?php else: ?>
-            <div class="row mt-4">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <?php include 'includes/header.php'; ?>
+    <div class="container mt-4">
+        <h1>Search Results</h1>
+        <?php if (!empty($books)): ?>
+            <div class="row">
                 <?php foreach ($books as $book): ?>
                     <div class="col-md-3 mb-4">
                         <div class="card book-card h-100">
@@ -46,12 +59,10 @@ if (!empty($keyword)) {
                     </div>
                 <?php endforeach; ?>
             </div>
+        <?php else: ?>
+            <p>No books found matching your search criteria.</p>
         <?php endif; ?>
-        
-        <div class="mt-4">
-            <a href="index.php" class="btn btn-secondary">Back to Home</a>
-        </div>
     </div>
-</div>
-
-<?php require_once 'includes/footer.php'; ?>
+    <?php include 'includes/footer.php'; ?>
+</body>
+</html>

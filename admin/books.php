@@ -67,13 +67,20 @@ $books = getAllBooks();
                                 <td><?php echo $book['is_old'] ? 'Used' : 'New'; ?></td>
                                 <td><?php echo $book['added_by_name'] ? $book['added_by_name'] : 'Admin'; ?></td>
                                 <td>
-                                    <a href="edit_book.php?id=<?php echo $book['id']; ?>" class="btn btn-primary btn-sm">Edit</a>
+                                    <a href="edit_book.php?id=<?php echo $book['id']; ?>" 
+                                       class="btn btn-primary btn-sm <?php echo ($book['is_old'] && $book['status'] === 'sold') ? 'disabled' : ''; ?>">
+                                       Edit
+                                    </a>
                                     
                                     <?php if ($book['status'] === 'pending' && $book['is_old']): ?>
-                                        <a href="approve_book.php?id=<?php echo $book['id']; ?>&action=approve" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to approve this book?')">Approve</a>
+                                        <a href="approve_book.php?id=<?php echo $book['id']; ?>&action=approve" 
+                                           class="btn btn-success btn-sm" 
+                                           onclick="return confirm('Are you sure you want to approve this book?')">Approve</a>
                                     <?php endif; ?>
                                     
-                                    <a href="delete_book.php?id=<?php echo $book['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this book?')">Delete</a>
+                                    <a href="delete_book.php?id=<?php echo $book['id']; ?>" 
+                                       class="btn btn-danger btn-sm" 
+                                       onclick="return confirm('Are you sure you want to delete this book?')">Delete</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

@@ -17,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $author = sanitize($_POST['author']);
     $description = sanitize($_POST['description']);
     $price = sanitize($_POST['price']);
-    $quantity = sanitize($_POST['quantity']);
     
     // Validate input
     if (empty($title)) {
@@ -32,12 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['price'] = 'Price is required';
     } elseif (!is_numeric($price) || $price <= 0) {
         $errors['price'] = 'Price must be a positive number';
-    }
-    
-    if (empty($quantity)) {
-        $errors['quantity'] = 'Quantity is required';
-    } elseif (!is_numeric($quantity) || $quantity <= 0) {
-        $errors['quantity'] = 'Quantity must be a positive number';
     }
     
     // Handle image upload
@@ -77,12 +70,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If no errors, add book to database
     if (empty($errors)) {
         $query = "INSERT INTO books (title, author, description, price, image, quantity, is_old, status) 
-                  VALUES ('$title', '$author', '$description', '$price', '$targetFile', $quantity, 0, 'available')";
+                  VALUES ('$title', '$author', '$description', '$price', '$targetFile', 1, 0, 'available')";
         
         if (mysqli_query($conn, $query)) {
             $success = true;
             // Reset form data
-            $title = $author = $description = $price = $quantity = '';
+            $title = $author = $description = $price = '';
         } else {
             $errors['general'] = 'Error adding book: ' . mysqli_error($conn);
         }
@@ -147,14 +140,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="number" class="form-control <?php echo isset($errors['price']) ? 'is-invalid' : ''; ?>" id="price" name="price" value="<?php echo isset($price) ? $price : ''; ?>" min="1" step="1" required>
                         <?php if (isset($errors['price'])): ?>
                             <div class="invalid-feedback"><?php echo $errors['price']; ?></div>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control <?php echo isset($errors['quantity']) ? 'is-invalid' : ''; ?>" id="quantity" name="quantity" value="<?php echo isset($quantity) ? $quantity : '1'; ?>" min="1" step="1" required>
-                        <?php if (isset($errors['quantity'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['quantity']; ?></div>
                         <?php endif; ?>
                     </div>
                     

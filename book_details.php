@@ -41,6 +41,15 @@ if (isLoggedIn() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ratin
     }
 }
 
+// Check if the user has reviewed and rated the book
+$userHasReviewed = false;
+if (isLoggedIn()) {
+    $userId = $_SESSION['user_id'];
+    $reviewCheckQuery = "SELECT * FROM ratings WHERE user_id = $userId AND book_id = $bookId";
+    $reviewCheckResult = mysqli_query($conn, $reviewCheckQuery);
+    $userHasReviewed = mysqli_num_rows($reviewCheckResult) > 0;
+}
+
 // Get book ratings and reviews
 $ratingsQuery = "SELECT r.*, u.name as user_name FROM ratings r 
                 JOIN users u ON r.user_id = u.id 
@@ -90,7 +99,11 @@ $avgRating = getBookRating($bookId);
         
         <?php if ($book['status'] === 'available'): ?>
             <?php if (isLoggedIn()): ?>
-                <a href="checkout.php?id=<?php echo $book['id']; ?>" class="btn btn-primary mb-3">Buy Now</a>
+                <?php if ($userHasReviewed): ?>
+                    <a href="checkout.php?id=<?php echo $book['id']; ?>" class="btn btn-primary mb-3">Buy Now</a>
+                <?php else: ?>
+                    <div class="alert alert-warning">You must review and rate this book before purchasing.</div>
+                <?php endif; ?>
             <?php else: ?>
                 <a href="login.php" class="btn btn-primary mb-3">Login to Buy</a>
             <?php endif; ?>

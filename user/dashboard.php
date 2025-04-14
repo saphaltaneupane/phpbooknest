@@ -55,79 +55,19 @@ while ($row = mysqli_fetch_assoc($result)) {
             <div class="list-group list-group-flush">
                 <a href="orders.php" class="list-group-item list-group-item-action">My Orders</a>
                 <a href="add_book.php" class="list-group-item list-group-item-action">Sell Old Book</a>
+                <a href="kept_books.php" class="list-group-item list-group-item-action">My Kept Books</a>
                 <a href="<?php echo $relativePath; ?>index.php" class="list-group-item list-group-item-action">Browse Books</a>
             </div>
         </div>
     </div>
     
     <div class="col-md-9">
-        <!-- Books Sent for Selling Section -->
-        <div class="card mb-4">
+        <div class="card">
             <div class="card-header bg-primary text-white">
-                Books Sent for Selling
+                <h3>Welcome to Your Dashboard</h3>
             </div>
             <div class="card-body">
-                <?php if (empty($sentBooks)): ?>
-                    <p>You haven't sent any books for selling yet.</p>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Author</th>
-                                    <th>Price</th>
-                                    <th>Submitted Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($sentBooks as $book): ?>
-                                    <tr>
-                                        <td><?php echo $book['title']; ?></td>
-                                        <td><?php echo $book['author']; ?></td>
-                                        <td>Rs. <?php echo number_format($book['price'], 2); ?></td>
-                                        <td><?php echo date('M d, Y', strtotime($book['created_at'])); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-        
-        <!-- Books Sold Section -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                Books Sold
-            </div>
-            <div class="card-body">
-                <?php if (empty($soldBooks)): ?>
-                    <p>You haven't sold any books yet.</p>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Author</th>
-                                    <th>Price</th>
-                                    <th>Sold Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($soldBooks as $book): ?>
-                                    <tr>
-                                        <td><?php echo $book['title']; ?></td>
-                                        <td><?php echo $book['author']; ?></td>
-                                        <td>Rs. <?php echo number_format($book['price'], 2); ?></td>
-                                        <td><?php echo date('M d, Y', strtotime($book['sold_date'])); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
+                <p>Use the quick links on the left to navigate through your account options.</p>
             </div>
         </div>
     </div>

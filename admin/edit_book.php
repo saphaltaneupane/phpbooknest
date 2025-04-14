@@ -28,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $author = sanitize($_POST['author']);
     $description = sanitize($_POST['description']);
     $price = sanitize($_POST['price']);
-    $quantity = sanitize($_POST['quantity']);
     $status = sanitize($_POST['status']);
     
     // Validate input
@@ -44,12 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['price'] = 'Price is required';
     } elseif (!is_numeric($price) || $price <= 0) {
         $errors['price'] = 'Price must be a positive number';
-    }
-    
-    if (empty($quantity)) {
-        $errors['quantity'] = 'Quantity is required';
-    } elseif (!is_numeric($quantity) || $quantity <= 0) {
-        $errors['quantity'] = 'Quantity must be a positive number';
     }
     
     // Handle image upload
@@ -89,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If no errors, update book in database
     if (empty($errors)) {
         $query = "UPDATE books SET title = '$title', author = '$author', description = '$description', 
-                  price = '$price', image = '$targetFile', quantity = $quantity, status = '$status' 
+                  price = '$price', image = '$targetFile', status = '$status' 
                   WHERE id = $bookId";
         
         if (mysqli_query($conn, $query)) {
@@ -160,14 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="number" class="form-control <?php echo isset($errors['price']) ? 'is-invalid' : ''; ?>" id="price" name="price" value="<?php echo $book['price']; ?>" min="1" step="1" required>
                         <?php if (isset($errors['price'])): ?>
                             <div class="invalid-feedback"><?php echo $errors['price']; ?></div>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control <?php echo isset($errors['quantity']) ? 'is-invalid' : ''; ?>" id="quantity" name="quantity" value="<?php echo $book['quantity']; ?>" min="1" step="1" required>
-                        <?php if (isset($errors['quantity'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['quantity']; ?></div>
                         <?php endif; ?>
                     </div>
                     

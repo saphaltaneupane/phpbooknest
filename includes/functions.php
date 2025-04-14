@@ -1,5 +1,5 @@
 <?php
-// Start session if not already started
+// Ensure no output is sent before this point
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -16,6 +16,11 @@ function isAdmin() {
 
 // Function to redirect
 function redirect($url) {
+    // Ensure no output is sent before calling header()
+    if (headers_sent()) {
+        echo "<script>window.location.href='$url';</script>";
+        exit();
+    }
     header("Location: $url");
     exit();
 }
@@ -192,5 +197,21 @@ function getOrderItems($orderId) {
     }
     
     return $items;
+}
+
+/**
+ * Update book status to 'sold' when the order is completed.
+ * 
+ * @param int $orderId The ID of the order.
+ */
+function updateBookStatusToSold($orderId) {
+    global $conn;
+    $query = "SELECT book_id FROM order_items WHERE order_id = $orderId";
+    $result = mysqli_query($conn, $query);
+    while ($row = mysqli_fetch_assoc($result)) {
+        $bookId = $row['book_id'];
+        $updateQuery = "UPDATE books SET status = 'sold' WHERE id = $bookId";
+        mysqli_query($conn, $updateQuery);
+    }
 }
 ?>
