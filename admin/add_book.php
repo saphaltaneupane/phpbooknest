@@ -83,26 +83,182 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<div class="row">
-    <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                Admin Panel
-            </div>
-            <div class="list-group list-group-flush">
-                <a href="dashboard.php" class="list-group-item list-group-item-action">Dashboard</a>
-                <a href="users.php" class="list-group-item list-group-item-action">Manage Users</a>
-                <a href="books.php" class="list-group-item list-group-item-action">Manage Books</a>
-                <a href="add_book.php" class="list-group-item list-group-item-action active">Add New Book</a>
-                <a href="orders.php" class="list-group-item list-group-item-action">Manage Orders</a>
-            </div>
+<style>
+    /* Basic layout */
+    .admin-container {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    /* Sidebar styles */
+    .sidebar {
+        width: 250px;
+        margin-right: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-header {
+        background-color: #0066cc;
+        color: white;
+        padding: 10px;
+        font-weight: bold;
+    }
+    
+    .menu-list {
+        border: 1px solid #ddd;
+    }
+    
+    .menu-link {
+        display: block;
+        padding: 10px;
+        text-decoration: none;
+        color: #333;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .menu-link:last-child {
+        border-bottom: none;
+    }
+    
+    .menu-link:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .menu-link.active {
+        background-color: #0066cc;
+        color: white;
+    }
+    
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        min-width: 300px;
+    }
+    
+    .card {
+        border: 1px solid #ddd;
+        margin-bottom: 20px;
+    }
+    
+    .card-header {
+        background-color: #0066cc;
+        color: white;
+        padding: 10px 15px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    /* Form styles */
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .form-control.invalid {
+        border-color: #dc3545;
+    }
+    
+    .form-text {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.9em;
+        color: #666;
+    }
+    
+    .error-feedback {
+        display: block;
+        color: #dc3545;
+        margin-top: 5px;
+        font-size: 0.9em;
+    }
+    
+    /* Alert styles */
+    .alert {
+        padding: 10px 15px;
+        margin-bottom: 15px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    
+    /* Button styles */
+    .btn {
+        display: inline-block;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background-color: #0066cc;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    /* Utility */
+    .button-row {
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 100%;
+            margin-right: 0;
+        }
+    }
+</style>
+
+<div class="admin-container">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            Admin Panel
+        </div>
+        <div class="menu-list">
+            <a href="dashboard.php" class="menu-link">Dashboard</a>
+            <a href="users.php" class="menu-link">Manage Users</a>
+            <a href="books.php" class="menu-link">Manage Books</a>
+            <a href="add_book.php" class="menu-link active">Add New Book</a>
+            <a href="orders.php" class="menu-link">Manage Orders</a>
         </div>
     </div>
     
-    <div class="col-md-9">
+    <div class="main-content">
         <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Add New Book</h3>
+            <div class="card-header">
+                <h3>Add New Book</h3>
             </div>
             <div class="card-body">
                 <?php if ($success): ?>
@@ -114,45 +270,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 
                 <form action="add_book.php" method="POST" enctype="multipart/form-data" novalidate>
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="title" class="form-label">Book Title</label>
-                        <input type="text" class="form-control <?php echo isset($errors['title']) ? 'is-invalid' : ''; ?>" id="title" name="title" value="<?php echo isset($title) ? $title : ''; ?>" required>
+                        <input type="text" class="form-control <?php echo isset($errors['title']) ? 'invalid' : ''; ?>" id="title" name="title" value="<?php echo isset($title) ? $title : ''; ?>" required>
                         <?php if (isset($errors['title'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['title']; ?></div>
+                            <div class="error-feedback"><?php echo $errors['title']; ?></div>
                         <?php endif; ?>
                     </div>
                     
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="author" class="form-label">Author</label>
-                        <input type="text" class="form-control <?php echo isset($errors['author']) ? 'is-invalid' : ''; ?>" id="author" name="author" value="<?php echo isset($author) ? $author : ''; ?>" required>
+                        <input type="text" class="form-control <?php echo isset($errors['author']) ? 'invalid' : ''; ?>" id="author" name="author" value="<?php echo isset($author) ? $author : ''; ?>" required>
                         <?php if (isset($errors['author'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['author']; ?></div>
+                            <div class="error-feedback"><?php echo $errors['author']; ?></div>
                         <?php endif; ?>
                     </div>
                     
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="4"><?php echo isset($description) ? $description : ''; ?></textarea>
                     </div>
                     
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="price" class="form-label">Price (in Rs.)</label>
-                        <input type="number" class="form-control <?php echo isset($errors['price']) ? 'is-invalid' : ''; ?>" id="price" name="price" value="<?php echo isset($price) ? $price : ''; ?>" min="1" step="1" required>
+                        <input type="number" class="form-control <?php echo isset($errors['price']) ? 'invalid' : ''; ?>" id="price" name="price" value="<?php echo isset($price) ? $price : ''; ?>" min="1" step="1" required>
                         <?php if (isset($errors['price'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['price']; ?></div>
+                            <div class="error-feedback"><?php echo $errors['price']; ?></div>
                         <?php endif; ?>
                     </div>
                     
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="image" class="form-label">Book Image</label>
-                        <input type="file" class="form-control <?php echo isset($errors['image']) ? 'is-invalid' : ''; ?>" id="image" name="image">
-                        <small class="text-muted">Upload an image of the book (optional). Max size: 5MB. Supported formats: JPG, JPEG, PNG, GIF.</small>
+                        <input type="file" class="form-control <?php echo isset($errors['image']) ? 'invalid' : ''; ?>" id="image" name="image">
+                        <small class="form-text">Upload an image of the book (optional). Max size: 5MB. Supported formats: JPG, JPEG, PNG, GIF.</small>
                         <?php if (isset($errors['image'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['image']; ?></div>
+                            <div class="error-feedback"><?php echo $errors['image']; ?></div>
                         <?php endif; ?>
                     </div>
                     
-                    <div class="d-flex justify-content-between">
+                    <div class="button-row">
                         <a href="books.php" class="btn btn-secondary">Back</a>
                         <button type="submit" class="btn btn-primary">Add Book</button>
                     </div>

@@ -12,30 +12,120 @@ if (!isLoggedIn() || !isAdmin()) {
 $users = getAllUsers();
 ?>
 
-<div class="row">
-    <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                Admin Panel
-            </div>
-            <div class="list-group list-group-flush">
-                <a href="dashboard.php" class="list-group-item list-group-item-action">Dashboard</a>
-                <a href="users.php" class="list-group-item list-group-item-action active">Manage Users</a>
-                <a href="books.php" class="list-group-item list-group-item-action">Manage Books</a>
-                <a href="add_book.php" class="list-group-item list-group-item-action">Add New Book</a>
-                <a href="orders.php" class="list-group-item list-group-item-action">Manage Orders</a>
-            </div>
+<style>
+    /* Basic layout */
+    .admin-container {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    
+    /* Sidebar styles */
+    .sidebar {
+        width: 250px;
+        margin-right: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-header {
+        background-color: #0066cc;
+        color: white;
+        padding: 10px;
+        font-weight: bold;
+    }
+    
+    .sidebar-menu {
+        border: 1px solid #ddd;
+        border-top: none;
+    }
+    
+    .sidebar-menu a {
+        display: block;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        text-decoration: none;
+        color: #333;
+    }
+    
+    .sidebar-menu a:last-child {
+        border-bottom: none;
+    }
+    
+    .sidebar-menu a:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .sidebar-menu a.active {
+        background-color: #0066cc;
+        color: white;
+    }
+    
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        min-width: 300px;
+    }
+    
+    /* Table styles */
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .users-table th, .users-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    
+    .users-table th {
+        background-color: #f5f5f5;
+    }
+    
+    .users-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    /* Alert */
+    .alert {
+        padding: 10px;
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        margin: 10px 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 100%;
+            margin-right: 0;
+        }
+    }
+</style>
+
+<div class="admin-container">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            Admin Panel
+        </div>
+        <div class="sidebar-menu">
+            <a href="dashboard.php">Dashboard</a>
+            <a href="users.php" class="active">Manage Users</a>
+            <a href="books.php">Manage Books</a>
+            <a href="add_book.php">Add New Book</a>
+            <a href="orders.php">Manage Orders</a>
         </div>
     </div>
     
-    <div class="col-md-9">
+    <div class="main-content">
         <h2>Manage Users</h2>
         
         <?php if (empty($users)): ?>
-            <div class="alert alert-info">No users found.</div>
+            <div class="alert">No users found.</div>
         <?php else: ?>
-            <div class="table-responsive">
-                <table class="table table-striped">
+            <div class="table-container">
+                <table class="users-table">
                     <thead>
                         <tr>
                             <th>ID</th>

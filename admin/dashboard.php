@@ -9,31 +9,82 @@ if (!isLoggedIn() || !isAdmin()) {
 }
 ?>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.php">Admin Panel</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'users.php' ? 'active' : ''; ?>" href="users.php">Manage Users</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'books.php' ? 'active' : ''; ?>" href="books.php">Manage Books</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'add_book.php' ? 'active' : ''; ?>" href="add_book.php">Add New Book</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'orders.php' ? 'active' : ''; ?>" href="orders.php">Manage Orders</a>
-                </li>
-            </ul>
-        </div>
+<style>
+    /* Simple CSS styles */
+    .admin-nav {
+        background-color: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .brand {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        display: block;
+    }
+    
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .nav-menu li {
+        display: inline-block;
+        margin-right: 15px;
+    }
+    
+    .nav-link {
+        text-decoration: none;
+        color: #333;
+    }
+    
+    .nav-link.active {
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    
+    /* Simple mobile menu */
+    @media (max-width: 768px) {
+        .nav-menu li {
+            display: block;
+            margin-bottom: 10px;
+        }
+    }
+</style>
+
+<nav class="admin-nav">
+    <div class="nav-container">
+        <a class="brand" href="dashboard.php">Admin Panel</a>
+        <ul class="nav-menu">
+            <li>
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">Dashboard</a>
+            </li>
+            <li>
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'users.php' ? 'active' : ''; ?>" href="users.php">Manage Users</a>
+            </li>
+            <li>
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'books.php' ? 'active' : ''; ?>" href="books.php">Manage Books</a>
+            </li>
+            <li>
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'add_book.php' ? 'active' : ''; ?>" href="add_book.php">Add New Book</a>
+            </li>
+            <li>
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'orders.php' ? 'active' : ''; ?>" href="orders.php">Manage Orders</a>
+            </li>
+        </ul>
     </div>
 </nav>
 
