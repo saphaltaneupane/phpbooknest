@@ -84,10 +84,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <style>
+    /* Global styles and reset */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f8f9fa;
+    }
+    
     /* Basic layout */
     .admin-container {
         display: flex;
         flex-wrap: wrap;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 15px;
     }
     
     /* Sidebar styles */
@@ -100,17 +117,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .sidebar-header {
         background-color: #0066cc;
         color: white;
-        padding: 10px;
+        padding: 12px 15px;
         font-weight: bold;
+        border-radius: 4px 4px 0 0;
     }
     
     .menu-list {
         border: 1px solid #ddd;
+        border-radius: 0 0 4px 4px;
+        background-color: #fff;
     }
     
     .menu-link {
         display: block;
-        padding: 10px;
+        padding: 12px 15px;
         text-decoration: none;
         color: #333;
         border-bottom: 1px solid #ddd;
@@ -137,13 +157,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     .card {
         border: 1px solid #ddd;
+        border-radius: 4px;
         margin-bottom: 20px;
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
     .card-header {
         background-color: #0066cc;
         color: white;
-        padding: 10px 15px;
+        padding: 12px 15px;
+        border-radius: 4px 4px 0 0;
+    }
+    
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
     }
     
     .card-body {
@@ -152,30 +181,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     /* Form styles */
     .form-group {
-        margin-bottom: 15px;
+        margin-bottom: 20px;
     }
     
     .form-label {
         display: block;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
         font-weight: bold;
+        color: #333;
     }
     
     .form-control {
         width: 100%;
-        padding: 8px;
+        padding: 10px;
         border: 1px solid #ddd;
         border-radius: 4px;
+        font-size: 16px;
+        color: #333;
+        background-color: #fff;
     }
     
     .form-control.invalid {
         border-color: #dc3545;
     }
     
+    .form-control:focus {
+        outline: none;
+        border-color: #0066cc;
+        box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+    }
+    
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
     .form-text {
         display: block;
         margin-top: 5px;
-        font-size: 0.9em;
+        font-size: 0.875rem;
         color: #666;
     }
     
@@ -183,12 +227,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         display: block;
         color: #dc3545;
         margin-top: 5px;
-        font-size: 0.9em;
+        font-size: 0.875rem;
     }
     
     /* Alert styles */
     .alert {
-        padding: 10px 15px;
+        padding: 12px 15px;
         margin-bottom: 15px;
         border: 1px solid transparent;
         border-radius: 4px;
@@ -209,11 +253,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* Button styles */
     .btn {
         display: inline-block;
-        padding: 8px 16px;
+        padding: 10px 16px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
         text-decoration: none;
+        font-size: 16px;
+        font-weight: 400;
+        text-align: center;
     }
     
     .btn-primary {
@@ -221,22 +268,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         color: white;
     }
     
+    .btn-primary:hover {
+        background-color: #0055aa;
+    }
+    
     .btn-secondary {
         background-color: #6c757d;
         color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #5a6268;
     }
     
     /* Utility */
     .button-row {
         display: flex;
         justify-content: space-between;
+        align-items: center;
+    }
+    
+    /* Table styles */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        color: #333;
+        background-color: #fff;
+    }
+    
+    table th,
+    table td {
+        padding: 12px 15px;
+        text-align: left;
+        border: 1px solid #ddd;
+    }
+    
+    table th {
+        background-color: #f8f9fa;
+        color: #333;
+        font-weight: bold;
+    }
+    
+    table tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    
+    table tr:hover {
+        background-color: #f1f1f1;
+    }
+    
+    /* Action buttons in tables */
+    .action-btn {
+        padding: 6px 10px;
+        margin-right: 5px;
+        font-size: 14px;
+    }
+    
+    /* Image preview */
+    .img-preview {
+        max-width: 100px;
+        max-height: 100px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 3px;
     }
     
     /* Responsive */
     @media (max-width: 768px) {
+        .admin-container {
+            flex-direction: column;
+        }
+        
         .sidebar {
             width: 100%;
             margin-right: 0;
+        }
+        
+        .button-row {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .button-row .btn {
+            width: 100%;
+        }
+        
+        table {
+            display: block;
+            overflow-x: auto;
         }
     }
 </style>

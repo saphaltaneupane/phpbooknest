@@ -96,6 +96,207 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
+<style>
+    /* General styles */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -15px;
+    }
+    .col-md-3 {
+        width: 25%;
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+    .col-md-9 {
+        width: 75%;
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+    @media (max-width: 767px) {
+        .col-md-3, .col-md-9 {
+            width: 100%;
+        }
+    }
+    
+    /* Card styles */
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #fff;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .card-header {
+        padding: 15px;
+        border-bottom: 1px solid #ddd;
+    }
+    .bg-primary {
+        background-color: #4a6da7;
+    }
+    .text-white {
+        color: white;
+    }
+    .mb-0 {
+        margin-bottom: 0;
+    }
+    .mb-4 {
+        margin-bottom: 20px;
+    }
+    .card-body {
+        padding: 15px;
+    }
+    
+    /* Navigation */
+    .list-group {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .list-group-flush {
+        border-radius: 0;
+    }
+    .list-group-item {
+        display: block;
+        padding: 12px 15px;
+        text-decoration: none;
+        color: #333;
+        border-bottom: 1px solid #ddd;
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    .list-group-item.active {
+        background-color: #4a6da7;
+        color: white;
+        border-color: #4a6da7;
+    }
+    
+    /* Alerts */
+    .alert {
+        padding: 12px 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+    }
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    /* Form elements */
+    .mb-3 {
+        margin-bottom: 15px;
+    }
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color:black;
+    }
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 16px;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        border-color: #80bdff;
+        outline: 0;
+    }
+    .form-select {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 16px;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    textarea.form-control {
+        height: auto;
+        min-height: 100px;
+    }
+    .is-invalid {
+        border-color: #dc3545;
+    }
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        margin-top: 5px;
+        font-size: 14px;
+    }
+    .text-muted {
+        color: #6c757d;
+        font-size: 14px;
+        margin-top: 5px;
+        display: block;
+    }
+    .img-thumbnail {
+        padding: 4px;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Buttons */
+    .d-flex {
+        display: flex;
+    }
+    .justify-content-between {
+        justify-content: space-between;
+    }
+    .btn {
+        display: inline-block;
+        font-weight: 400;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: middle;
+        user-select: none;
+        border: 1px solid transparent;
+        padding: 8px 16px;
+        font-size: 16px;
+        line-height: 1.5;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .btn-primary {
+        color: #fff;
+        background-color: #4a6da7;
+        border-color: #4a6da7;
+    }
+    .btn-primary:hover {
+        background-color: #3a5a8f;
+        border-color: #3a5a8f;
+    }
+    .btn-secondary {
+        color: #fff;
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #545b62;
+    }
+</style>
+
 <div class="row">
     <div class="col-md-3">
         <div class="card mb-4">
@@ -103,11 +304,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Admin Panel
             </div>
             <div class="list-group list-group-flush">
-                <a href="dashboard.php" class="list-group-item list-group-item-action">Dashboard</a>
-                <a href="users.php" class="list-group-item list-group-item-action">Manage Users</a>
-                <a href="books.php" class="list-group-item list-group-item-action active">Manage Books</a>
-                <a href="add_book.php" class="list-group-item list-group-item-action">Add New Book</a>
-                <a href="orders.php" class="list-group-item list-group-item-action">Manage Orders</a>
+                <a href="dashboard.php" class="list-group-item">Dashboard</a>
+                <a href="users.php" class="list-group-item">Manage Users</a>
+                <a href="books.php" class="list-group-item active">Manage Books</a>
+                <a href="add_book.php" class="list-group-item">Add New Book</a>
+                <a href="orders.php" class="list-group-item">Manage Orders</a>
             </div>
         </div>
     </div>

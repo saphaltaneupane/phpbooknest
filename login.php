@@ -50,96 +50,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <style>
-    /* Internal CSS for Login Page */
+    /* Login Page Styles */
     .login-container {
-        padding: 50px 0;
-        min-height: calc(100vh - 250px);
-        background-color: #f8f9fa;
-        display: flex;
-        align-items: center;
+        width: 100%;
+        max-width: 450px;
+        margin: 50px auto;
+        padding: 0 15px;
     }
     
-    .card {
-        border: none;
+    .login-card {
+        background-color: #fff;
         border-radius: 10px;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         overflow: hidden;
         transition: all 0.3s ease;
     }
     
-    .card:hover {
+    .login-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
     }
     
-    .card-header {
-        background-color: #007bff !important;
+    .login-header {
+        background-color: #6c63ff;
+        color: white;
         padding: 20px;
-        border-bottom: none;
+        text-align: center;
     }
     
-    .card-header h3 {
+    .login-header h2 {
+        margin: 0;
+        font-size: 24px;
         font-weight: 600;
-        letter-spacing: 0.5px;
     }
     
-    .card-body {
+    .login-body {
         padding: 30px;
     }
     
-    .form-label {
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 8px;
-    }
-    
-    .form-control {
-        border-radius: 6px;
-        padding: 12px 15px;
-        border: 1px solid #ced4da;
-        transition: all 0.3s ease;
-    }
-    
-    .form-control:focus {
-        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
-        border-color: #007bff;
-    }
-    
-    .form-control.is-invalid {
-        border-color: #dc3545;
-    }
-    
-    .invalid-feedback {
-        font-size: 0.85rem;
-        margin-top: 5px;
-    }
-    
-    .btn-primary {
-        background-color: #007bff;
-        border: none;
-        padding: 12px 20px;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        border-radius: 6px;
-        box-shadow: 0 4px 6px rgba(0, 123, 255, 0.25);
-        transition: all 0.3s ease;
-    }
-    
-    .btn-primary:hover, .btn-primary:focus {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 10px rgba(0, 123, 255, 0.3);
-        background-color: #0069d9;
-    }
-    
-    .btn-primary:active {
-        transform: translateY(0);
-    }
-    
     .alert {
-        border-radius: 6px;
         padding: 15px;
         margin-bottom: 20px;
-        border: none;
+        border-radius: 6px;
         font-weight: 500;
     }
     
@@ -153,81 +105,140 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         color: #155724;
     }
     
-    .text-center p {
-        margin-top: 15px;
-        color: #6c757d;
+    .form-group {
+        margin-bottom: 20px;
     }
     
-    .text-center a {
-        color: #007bff;
+    .form-label {
+        display: block;
         font-weight: 500;
+        margin-bottom: 8px;
+        color: #495057;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #6c63ff;
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.25);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .error-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    
+    .login-btn {
+        width: 100%;
+        background-color: #6c63ff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(108, 99, 255, 0.25);
+    }
+    
+    .login-btn:hover {
+        background-color: #5652db;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px rgba(108, 99, 255, 0.3);
+    }
+    
+    .login-footer {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .login-footer p {
+        color: #6c757d;
+        margin: 0;
+    }
+    
+    .login-footer a {
+        color: #6c63ff;
         text-decoration: none;
+        font-weight: 500;
         transition: all 0.2s ease;
     }
     
-    .text-center a:hover {
-        color: #0056b3;
+    .login-footer a:hover {
         text-decoration: underline;
+        color: #5652db;
     }
     
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .login-container {
-            padding: 30px 15px;
+            margin: 30px auto;
         }
         
-        .card-body {
+        .login-body {
             padding: 25px 20px;
         }
     }
 </style>
 
 <div class="login-container">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 offset-md-3">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="mb-0">Login</h3>
-                    </div>
-                    <div class="card-body">
-                        <?php if (isset($_SESSION['success_message'])): ?>
-                            <div class="alert alert-success"><?php echo $_SESSION['success_message']; ?></div>
-                            <?php unset($_SESSION['success_message']); ?>
-                        <?php endif; ?>
-                        
-                        <?php if (isset($errors['general'])): ?>
-                            <div class="alert alert-danger"><?php echo $errors['general']; ?></div>
-                        <?php endif; ?>
-                        
-                        <form action="login.php" method="POST" novalidate>
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>" id="email" name="email" value="<?php echo $email; ?>" required>
-                                <?php if (isset($errors['email'])): ?>
-                                    <div class="invalid-feedback"><?php echo $errors['email']; ?></div>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>" id="password" name="password" required>
-                                <?php if (isset($errors['password'])): ?>
-                                    <div class="invalid-feedback"><?php echo $errors['password']; ?></div>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-primary w-100">Login</button>
-                            </div>
-                            
-                            <div class="text-center">
-                                <p>Don't have an account? <a href="register.php">Register</a></p>
-                            </div>
-                        </form>
-                    </div>
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Login</h2>
+        </div>
+        <div class="login-body">
+            <?php if (isset($_SESSION['success_message'])): ?>
+                <div class="alert alert-success"><?php echo $_SESSION['success_message']; ?></div>
+                <?php unset($_SESSION['success_message']); ?>
+            <?php endif; ?>
+            
+            <?php if (isset($errors['general'])): ?>
+                <div class="alert alert-danger"><?php echo $errors['general']; ?></div>
+            <?php endif; ?>
+            
+            <form action="login.php" method="POST" novalidate>
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>" 
+                           id="email" name="email" value="<?php echo $email; ?>" required>
+                    <?php if (isset($errors['email'])): ?>
+                        <span class="error-feedback"><?php echo $errors['email']; ?></span>
+                    <?php endif; ?>
                 </div>
-            </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>" 
+                           id="password" name="password" required>
+                    <?php if (isset($errors['password'])): ?>
+                        <span class="error-feedback"><?php echo $errors['password']; ?></span>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="login-btn">Login</button>
+                </div>
+                
+                <div class="login-footer">
+                    <p>Don't have an account? <a href="register.php">Register</a></p>
+                </div>
+            </form>
         </div>
     </div>
 </div>
