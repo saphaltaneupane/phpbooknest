@@ -59,17 +59,20 @@ function getBookById($bookId) {
     return mysqli_fetch_assoc($result);
 }
 
-// Function to get top rated books (using priority queue concept)
+/**
+ * Function to get top rated books (using priority queue concept).
+ */
 function getTopRatedBooks($limit = 5) {
     global $conn;
 
     // Query to fetch books with their average rating and rating count
+    // Ensure only books with avg_rating >= 4 are included
     $query = "SELECT books.*, AVG(ratings.rating) as avg_rating, COUNT(ratings.id) as rating_count 
               FROM books 
               JOIN ratings ON books.id = ratings.book_id 
-              WHERE books.status = 'available' 
+              WHERE books.quantity > 0 
               GROUP BY books.id
-              HAVING avg_rating >= 4"; // Exclude books with avg_rating below 4
+              HAVING avg_rating >= 4"; // Include books with avg_rating equal to or greater than 4
 
     $result = mysqli_query($conn, $query);
 
@@ -77,8 +80,9 @@ function getTopRatedBooks($limit = 5) {
     $priorityQueue = new SplPriorityQueue();
 
     while ($row = mysqli_fetch_assoc($result)) {
-        // Use avg_rating as the primary priority and rating_count as the secondary priority
-        $priority = [$row['avg_rating'], $row['rating_count']];
+        // Use avg_rating as the primary priority
+        // SplPriorityQueue processes items with higher priority values first
+        $priority = $row['avg_rating']; // Use avg_rating directly for prioritization
         $priorityQueue->insert($row, $priority);
     }
 
@@ -131,10 +135,16 @@ function getAllBooks() {
     return $books;
 }
 
-// Function to get available books
+/**
+ * Get available books with quantity > 0.
+ */
 function getAvailableBooks() {
     global $conn;
-    $query = "SELECT * FROM books WHERE status = 'available'";
+    // Join with users table to get added_by info and is_admin status
+    // Note: We only check for quantity > 0, not the status
+    $query = "SELECT books.*, users.name as added_by_name, users.is_admin as added_by_is_admin FROM books 
+              LEFT JOIN users ON books.added_by = users.id 
+              WHERE books.quantity > 0";
     $result = mysqli_query($conn, $query);
     $books = [];
     
@@ -143,6 +153,94 @@ function getAvailableBooks() {
     }
     
     return $books;
+}
+
+/**
+ * Decrement the quantity of books in an order.
+ * If quantity reaches 0 or less, update book status to 'sold'.
+ * 
+ * @param int $orderId The ID of the order.
+ */
+function decrementBookQuantity($orderId) {
+    global $conn;
+    $query = "SELECT book_id, quantity FROM order_items WHERE order_id = $orderId";
+    $result = mysqli_query($conn, $query);
+    while ($row = mysqli_fetch_assoc($result)) {
+        $bookId = $row['book_id'];
+        $orderQuantity = $row['quantity'] ?? 1;
+        
+        // Get current quantity
+        $qtyQuery = "SELECT quantity FROM books WHERE id = $bookId";
+        $qtyResult = mysqli_query($conn, $qtyQuery);
+        $book = mysqli_fetch_assoc($qtyResult);
+        
+        if ($book) {
+            $currentQuantity = (int)$book['quantity'];
+            
+            // Calculate new quantity
+            $newQuantity = $currentQuantity - $orderQuantity;
+            if ($newQuantity < 0) {
+                $newQuantity = 0;
+            }
+            
+            // Update quantity and status if needed
+            if ($newQuantity == 0) {
+                $updateQuery = "UPDATE books SET quantity = 0, status = 'sold' WHERE id = $bookId";
+            } else {
+                $updateQuery = "UPDATE books SET quantity = $newQuantity WHERE id = $bookId";
+            }
+            
+            mysqli_query($conn, $updateQuery);
+        }
+    }
+}
+
+/**
+ * Update book quantity immediately when an order is placed.
+ * If quantity reaches 0, update book status to 'sold'.
+ * 
+ * @param int $bookId The ID of the book.
+ * @param int $orderQuantity The quantity being ordered.
+ * @return bool Success status.
+ */
+function updateBookQuantity($bookId, $orderQuantity = 1) {
+    global $conn;
+    
+    // Get current book information including added_by and status
+    $query = "SELECT quantity, added_by, status FROM books WHERE id = $bookId";
+    $result = mysqli_query($conn, $query);
+    
+    if ($result && $book = mysqli_fetch_assoc($result)) {
+        $currentQuantity = (int)$book['quantity'];
+        $addedBy = $book['added_by'];
+        $currentStatus = $book['status'];
+        
+        // Calculate new quantity
+        $newQuantity = $currentQuantity - $orderQuantity;
+        
+        // Prevent negative quantity
+        if ($newQuantity < 0) {
+            $newQuantity = 0;
+        }
+        
+        // Determine new status
+        $newStatus = $currentStatus;
+        
+        if ($newQuantity == 0) {
+            // If quantity is 0, mark as sold
+            $newStatus = 'sold';
+        } else {
+            // If quantity > 0, always set status to available
+            $newStatus = 'available';
+        }
+        
+        // Update book quantity and status
+        $updateQuery = "UPDATE books SET quantity = $newQuantity, status = '$newStatus' WHERE id = $bookId";
+        
+        return mysqli_query($conn, $updateQuery);
+    }
+    
+    return false;
 }
 
 // Function to get book rating
@@ -210,8 +308,15 @@ function updateBookStatusToSold($orderId) {
     $result = mysqli_query($conn, $query);
     while ($row = mysqli_fetch_assoc($result)) {
         $bookId = $row['book_id'];
-        $updateQuery = "UPDATE books SET status = 'sold' WHERE id = $bookId";
-        mysqli_query($conn, $updateQuery);
+        // Check quantity before updating status
+        $qtyQuery = "SELECT quantity FROM books WHERE id = $bookId";
+        $qtyResult = mysqli_query($conn, $qtyQuery);
+        $book = mysqli_fetch_assoc($qtyResult);
+        $quantity = $book ? (int)$book['quantity'] : 0;
+        if ($quantity == 0) {
+            $updateQuery = "UPDATE books SET status = 'sold' WHERE id = $bookId";
+            mysqli_query($conn, $updateQuery);
+        }
     }
 }
 ?>

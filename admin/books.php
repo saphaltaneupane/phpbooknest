@@ -10,6 +10,15 @@ if (!isLoggedIn() || !isAdmin()) {
 
 // Get all books
 $books = getAllBooks();
+
+// Update book status to 'available' if quantity > 0 but status is not 'available'
+foreach ($books as &$book) {
+    if ($book['quantity'] > 0 && $book['status'] !== 'available') {
+        $updateQuery = "UPDATE books SET status = 'available' WHERE id = " . $book['id'];
+        mysqli_query($conn, $updateQuery);
+        $book['status'] = 'available'; // Update local copy for display
+    }
+}
 ?>
 
 <style>

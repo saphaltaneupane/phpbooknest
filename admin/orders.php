@@ -43,9 +43,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
         
         if (mysqli_query($conn, $query)) {
             $updated = true;
-            // Update book status to 'sold' if order status is 'completed'
-            if ($status === 'completed') {
-                updateBookStatusToSold($orderId);
+            
+            // Check if both order status and payment status are completed
+            $orderQuery = "SELECT status, payment_status FROM orders WHERE id = $orderId";
+            $orderResult = mysqli_query($conn, $orderQuery);
+            $orderData = mysqli_fetch_assoc($orderResult);
+            
+            if ($orderData['status'] === 'completed' && $orderData['payment_status'] === 'completed') {
+                // Decrement the book quantity
+                // decrementBookQuantity($orderId);
             }
         } else {
             $errorMsg .= 'Error updating order status: ' . mysqli_error($conn) . '<br>';
@@ -63,6 +69,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
             
             if (mysqli_query($conn, $query)) {
                 $updated = true;
+                
+                // Check if both order status and payment status are completed
+                $orderQuery = "SELECT status, payment_status FROM orders WHERE id = $orderId";
+                $orderResult = mysqli_query($conn, $orderQuery);
+                $orderData = mysqli_fetch_assoc($orderResult);
+                
+                if ($orderData['status'] === 'completed' && $orderData['payment_status'] === 'completed') {
+                // Decrement the book quantity
+                // decrementBookQuantity($orderId);
+                }
             } else {
                 $errorMsg .= 'Error updating payment status: ' . mysqli_error($conn);
             }

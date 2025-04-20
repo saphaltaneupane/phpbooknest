@@ -428,6 +428,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php endif; ?>
                     </div>
                     
+                    <div class="form-group">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" required>
+                    </div>
                     <div class="button-row">
                         <a href="books.php" class="btn btn-secondary">Back</a>
                         <button type="submit" class="btn btn-primary">Add Book</button>

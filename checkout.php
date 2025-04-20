@@ -12,8 +12,8 @@ $bookId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 // Get book details
 $book = getBookById($bookId);
 
-// If book not found or not available, redirect to homepage
-if (!$book || $book['status'] !== 'available') {
+// If book not found or quantity is 0, redirect to homepage
+if (!$book || $book['quantity'] <= 0) {
     redirect('index.php');
 }
 
@@ -26,35 +26,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $paymentMethod = sanitize($_POST['payment_method']);
     $totalAmount = $book['price'];
     
-    // Insert order into database
-    $query = "INSERT INTO orders (user_id, total_amount, payment_method, status) 
-              VALUES ($userId, $totalAmount, '$paymentMethod', 'pending')";
-    
-    if (mysqli_query($conn, $query)) {
-        $orderId = mysqli_insert_id($conn);
-        
-        // Insert order item
-        $query = "INSERT INTO order_items (order_id, book_id, quantity, price) 
-                  VALUES ($orderId, $bookId, 1, $totalAmount)";
-        mysqli_query($conn, $query);
-        
-        // Update book status
-        $query = "UPDATE books SET status = 'pending' WHERE id = $bookId";
-        mysqli_query($conn, $query);
-        
-        // If payment method is cash on delivery, redirect to success page
-        if ($paymentMethod === 'cash') {
-            $_SESSION['success_message'] = 'Order placed successfully! Your order will be delivered soon.';
-            redirect('payment_success.php?order_id=' . $orderId);
-        } else {
-            // For Khalti payment, initialize payment and redirect
-            $_SESSION['order_id'] = $orderId;
-            $_SESSION['book_id'] = $bookId;
-            $_SESSION['amount'] = $totalAmount;
-            redirect('khalti_payment.php');
-        }
+    // Check book quantity again before processing (in case of concurrent orders)
+    $freshBookData = getBookById($bookId);
+    if ($freshBookData['quantity'] <= 0) {
+        $error = 'Sorry, this book is no longer available.';
     } else {
-        $error = 'Error placing order: ' . mysqli_error($conn);
+        // Insert order into database
+        $query = "INSERT INTO orders (user_id, total_amount, payment_method, status) 
+                  VALUES ($userId, $totalAmount, '$paymentMethod', 'pending')";
+        
+        if (mysqli_query($conn, $query)) {
+            $orderId = mysqli_insert_id($conn);
+            
+            // Insert order item
+            $query = "INSERT INTO order_items (order_id, book_id, quantity, price) 
+                      VALUES ($orderId, $bookId, 1, $totalAmount)";
+            
+            if (mysqli_query($conn, $query)) {
+        // Immediately update book quantity if available
+        $freshBookData = getBookById($bookId);
+        if ($freshBookData['quantity'] > 0) {
+            updateBookQuantity($bookId, 1);
+        } else {
+            $error = 'Sorry, this book is no longer available.';
+        }
+                
+                // If payment method is cash on delivery, redirect to success page
+                if ($paymentMethod === 'cash') {
+                    $_SESSION['success_message'] = 'Order placed successfully! Your order will be delivered soon.';
+                    redirect('payment_success.php?order_id=' . $orderId);
+                } else {
+                    // For Khalti payment, initialize payment and redirect
+                    $_SESSION['order_id'] = $orderId;
+                    $_SESSION['book_id'] = $bookId;
+                    $_SESSION['amount'] = $totalAmount;
+                    redirect('khalti_payment.php');
+                }
+            } else {
+                $error = 'Error adding order item: ' . mysqli_error($conn);
+            }
+        } else {
+            $error = 'Error placing order: ' . mysqli_error($conn);
+        }
     }
 }
 ?>
@@ -78,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h4><?php echo $book['title']; ?></h4>
                         <p>by <?php echo $book['author']; ?></p>
                         <p><strong>Price:</strong> Rs. <?php echo $book['price']; ?></p>
+                        <p><strong>Quantity Available:</strong> <?php echo $book['quantity']; ?></p>
                     </div>
                 </div>
                 

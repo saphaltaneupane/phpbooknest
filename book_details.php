@@ -7,8 +7,8 @@ $bookId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 // Get book details
 $book = getBookById($bookId);
 
-// If book not found, redirect to homepage
-if (!$book) {
+// If book not found or quantity is 0, redirect to homepage
+if (!$book || $book['quantity'] <= 0) {
     redirect('index.php');
 }
 
@@ -38,6 +38,9 @@ if (isLoggedIn() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ratin
         }
 
         $ratingSubmitted = true;
+        
+        // Refresh the page to update userHasReviewed status
+        redirect("book_details.php?id=$bookId");
     }
 }
 
@@ -89,7 +92,22 @@ $avgRating = getBookRating($bookId);
         </div>
         
         <p><strong>Price:</strong> Rs. <?php echo $book['price']; ?></p>
-        <p><strong>Status:</strong> <?php echo ucfirst($book['status']); ?></p>
+        
+        <!-- Display quantity information -->
+        <p><strong>Availability:</strong> 
+            <?php 
+            if (isLoggedIn() && $_SESSION['user_id'] == $book['added_by']) {
+                // Hide quantity for books added by the logged-in user
+                echo '<span class="text-muted">Quantity hidden for your added book</span>';
+            } else {
+                if ($book['quantity'] > 0) {
+                    echo '<span class="text-success">' . $book['quantity'] . ' copies available</span>';
+                } else {
+                    echo '<span class="text-danger">Out of stock</span>';
+                }
+            }
+            ?>
+        </p>
         
         <?php if ($book['is_old']): ?>
             <p><span class="badge bg-secondary">Used Book</span></p>
@@ -97,18 +115,21 @@ $avgRating = getBookRating($bookId);
         
         <p><?php echo $book['description']; ?></p>
         
-        <?php if ($book['status'] === 'available'): ?>
+        <?php if ($book['quantity'] > 0): ?>
             <?php if (isLoggedIn()): ?>
                 <?php if ($userHasReviewed): ?>
                     <a href="checkout.php?id=<?php echo $book['id']; ?>" class="btn btn-primary mb-3">Buy Now</a>
                 <?php else: ?>
-                    <div class="alert alert-warning">You must review and rate this book before purchasing.</div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        You must review and rate this book before purchasing. Please scroll down to the reviews section.
+                    </div>
                 <?php endif; ?>
             <?php else: ?>
                 <a href="login.php" class="btn btn-primary mb-3">Login to Buy</a>
             <?php endif; ?>
         <?php else: ?>
-            <button class="btn btn-secondary mb-3" disabled>Not Available</button>
+            <button class="btn btn-secondary mb-3" disabled>Out of Stock</button>
         <?php endif; ?>
     </div>
 </div>
@@ -120,10 +141,19 @@ $avgRating = getBookRating($bookId);
         
         <?php if (isLoggedIn()): ?>
             <div class="card mb-4">
-                <div class="card-header">Write a Review</div>
+                <div class="card-header">
+                    <?php if (!$userHasReviewed): ?>
+                        <strong>Write a Review</strong>
+                        <?php if ($book['quantity'] > 0): ?>
+                            <span class="text-danger"> (Required before purchase)</span>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <strong>Update Your Review</strong>
+                    <?php endif; ?>
+                </div>
                 <div class="card-body">
                     <?php if ($ratingSubmitted): ?>
-                        <div class="alert alert-success">Your review has been submitted!</div>
+                        <div class="alert alert-success">Your review has been submitted successfully!</div>
                     <?php elseif (isset($error)): ?>
                         <div class="alert alert-danger"><?php echo $error; ?></div>
                     <?php endif; ?>
@@ -156,22 +186,37 @@ $avgRating = getBookRating($bookId);
                         </div>
                         <div class="mb-3">
                             <label for="review" class="form-label">Review</label>
-                            <textarea class="form-control" id="review" name="review" rows="3" required></textarea>
+                            <textarea class="form-control" id="review" name="review" rows="3" required placeholder="Share your thoughts about this book..."></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                        <button type="submit" class="btn btn-primary">
+                            <?php echo $userHasReviewed ? 'Update Review' : 'Submit Review'; ?>
+                        </button>
+                        
+                        <?php if (!$userHasReviewed && $book['quantity'] > 0): ?>
+                            <p class="text-muted mt-2">
+                                <small><i class="fas fa-info-circle"></i> Your review helps other readers. After submitting your review, you'll be able to purchase this book.</small>
+                            </p>
+                        <?php endif; ?>
                     </form>
                 </div>
             </div>
         <?php endif; ?>
         
         <?php if (empty($ratings)): ?>
-            <p>No reviews yet. Be the first to leave a review!</p>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No reviews yet. Be the first to leave a review!
+            </div>
         <?php else: ?>
             <?php foreach ($ratings as $rating): ?>
-                <div class="card mb-3">
+                <div class="card mb-3 <?php echo (isLoggedIn() && $rating['user_id'] == $_SESSION['user_id']) ? 'border-primary' : ''; ?>">
                     <div class="card-body">
                         <div class="d-flex justify-content-between mb-2">
-                            <h5 class="card-title"><?php echo $rating['user_name']; ?></h5>
+                            <h5 class="card-title">
+                                <?php echo $rating['user_name']; ?>
+                                <?php if (isLoggedIn() && $rating['user_id'] == $_SESSION['user_id']): ?>
+                                    <span class="badge bg-primary">Your Review</span>
+                                <?php endif; ?>
+                            </h5>
                             <div>
                                 <?php 
                                 for ($i = 1; $i <= 5; $i++) {
