@@ -7,9 +7,26 @@ $bookId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 // Get book details
 $book = getBookById($bookId);
 
-// If book not found or quantity is 0, redirect to homepage
-if (!$book || $book['quantity'] <= 0) {
+// If book not found, redirect to homepage
+if (!$book) {
     redirect('index.php');
+}
+
+// Check if the user has completed a purchase for this book
+$userHasCompletedPurchase = false;
+if (isLoggedIn()) {
+    $userId = $_SESSION['user_id'];
+    
+    // Check if user has purchased this book with completed status
+    $query = "SELECT o.id FROM orders o 
+              JOIN order_items oi ON o.id = oi.order_id 
+              WHERE o.user_id = $userId 
+              AND oi.book_id = $bookId 
+              AND o.payment_status = 'completed' 
+              AND o.status = 'completed'";
+    
+    $result = mysqli_query($conn, $query);
+    $userHasCompletedPurchase = mysqli_num_rows($result) > 0;
 }
 
 // Handle rating submission
@@ -39,7 +56,7 @@ if (isLoggedIn() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ratin
 
         $ratingSubmitted = true;
         
-        // Refresh the page to update userHasReviewed status
+        // Refresh the page to update
         redirect("book_details.php?id=$bookId");
     }
 }
@@ -109,7 +126,7 @@ $avgRating = getBookRating($bookId);
             ?>
         </p>
         
-        <?php if ($book['is_old']): ?>
+        <?php if (isset($book['is_old']) && $book['is_old'] == 1): ?>
             <p><span class="badge bg-secondary">Used Book</span></p>
         <?php endif; ?>
         
@@ -117,14 +134,7 @@ $avgRating = getBookRating($bookId);
         
         <?php if ($book['quantity'] > 0): ?>
             <?php if (isLoggedIn()): ?>
-                <?php if ($userHasReviewed): ?>
-                    <a href="checkout.php?id=<?php echo $book['id']; ?>" class="btn btn-primary mb-3">Buy Now</a>
-                <?php else: ?>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i> 
-                        You must review and rate this book before purchasing. Please scroll down to the reviews section.
-                    </div>
-                <?php endif; ?>
+                <a href="checkout.php?id=<?php echo $book['id']; ?>" class="btn btn-primary mb-3">Buy Now</a>
             <?php else: ?>
                 <a href="login.php" class="btn btn-primary mb-3">Login to Buy</a>
             <?php endif; ?>
@@ -140,71 +150,73 @@ $avgRating = getBookRating($bookId);
         <h3>Reviews and Ratings</h3>
         
         <?php if (isLoggedIn()): ?>
-            <div class="card mb-4">
-                <div class="card-header">
-                    <?php if (!$userHasReviewed): ?>
-                        <strong>Write a Review</strong>
-                        <?php if ($book['quantity'] > 0): ?>
-                            <span class="text-danger"> (Required before purchase)</span>
+            <?php if ($userHasCompletedPurchase): ?>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <?php if (!$userHasReviewed): ?>
+                            <strong>Write a Review</strong>
+                            <span class="text-muted">(Thank you for your purchase!)</span>
+                        <?php else: ?>
+                            <strong>Update Your Review</strong>
                         <?php endif; ?>
-                    <?php else: ?>
-                        <strong>Update Your Review</strong>
-                    <?php endif; ?>
-                </div>
-                <div class="card-body">
-                    <?php if ($ratingSubmitted): ?>
-                        <div class="alert alert-success">Your review has been submitted successfully!</div>
-                    <?php elseif (isset($error)): ?>
-                        <div class="alert alert-danger"><?php echo $error; ?></div>
-                    <?php endif; ?>
-                    
-                    <form action="book_details.php?id=<?php echo $bookId; ?>" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label">Rating</label>
-                            <div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="rating" id="rating1" value="1" required>
-                                    <label class="form-check-label" for="rating1">1</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="rating" id="rating2" value="2">
-                                    <label class="form-check-label" for="rating2">2</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="rating" id="rating3" value="3">
-                                    <label class="form-check-label" for="rating3">3</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="rating" id="rating4" value="4">
-                                    <label class="form-check-label" for="rating4">4</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="rating" id="rating5" value="5">
-                                    <label class="form-check-label" for="rating5">5</label>
+                    </div>
+                    <div class="card-body">
+                        <?php if ($ratingSubmitted): ?>
+                            <div class="alert alert-success">Your review has been submitted successfully!</div>
+                        <?php elseif (isset($error)): ?>
+                            <div class="alert alert-danger"><?php echo $error; ?></div>
+                        <?php endif; ?>
+                        
+                        <form action="book_details.php?id=<?php echo $bookId; ?>" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Rating</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating1" value="1" required>
+                                        <label class="form-check-label" for="rating1">1</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating2" value="2">
+                                        <label class="form-check-label" for="rating2">2</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating3" value="3">
+                                        <label class="form-check-label" for="rating3">3</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating4" value="4">
+                                        <label class="form-check-label" for="rating4">4</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating5" value="5">
+                                        <label class="form-check-label" for="rating5">5</label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="review" class="form-label">Review</label>
-                            <textarea class="form-control" id="review" name="review" rows="3" required placeholder="Share your thoughts about this book..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <?php echo $userHasReviewed ? 'Update Review' : 'Submit Review'; ?>
-                        </button>
-                        
-                        <?php if (!$userHasReviewed && $book['quantity'] > 0): ?>
+                            <div class="mb-3">
+                                <label for="review" class="form-label">Review</label>
+                                <textarea class="form-control" id="review" name="review" rows="3" required placeholder="Share your thoughts about this book..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <?php echo $userHasReviewed ? 'Update Review' : 'Submit Review'; ?>
+                            </button>
+                            
                             <p class="text-muted mt-2">
-                                <small><i class="fas fa-info-circle"></i> Your review helps other readers. After submitting your review, you'll be able to purchase this book.</small>
+                                <small><i class="fas fa-info-circle"></i> Your review helps other readers make informed decisions.</small>
                             </p>
-                        <?php endif; ?>
-                    </form>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            <?php elseif (!$userHasCompletedPurchase): ?>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> You can review this book after completing a purchase.
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
         
         <?php if (empty($ratings)): ?>
             <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No reviews yet. Be the first to leave a review!
+                <i class="fas fa-info-circle"></i> No reviews yet. Be the first to leave a review after purchasing!
             </div>
         <?php else: ?>
             <?php foreach ($ratings as $rating): ?>

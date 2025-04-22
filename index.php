@@ -297,7 +297,22 @@ $recommendedBooks = getTopRatedBooks(4);
                                 <span class="rating-count"><?php echo round($avgRating, 1); ?></span>
                             </div>
                             <p class="card-text book-price">Rs. <?php echo $book['price']; ?></p>
-                            <a href="book_details.php?id=<?php echo $book['id']; ?>" class="btn btn-primary">View Details</a>
+                            <?php if (isset($book['is_old']) && $book['is_old'] == 1): ?>
+                                <span class="badge bg-secondary used-badge">Used</span>
+                            <?php endif; ?>
+                            <p class="card-text">
+                                <small class="<?php echo $book['quantity'] > 0 ? 'text-success' : 'text-danger'; ?>">
+                                    <?php if ($book['quantity'] > 0): ?>
+                                        <?php echo $book['quantity']; ?> copies available
+                                    <?php else: ?>
+                                        Out of stock
+                                    <?php endif; ?>
+                                </small>
+                            </p>
+                            <a href="book_details.php?id=<?php echo $book['id']; ?>" 
+                               class="btn <?php echo $book['quantity'] > 0 ? 'btn-primary' : 'btn-secondary'; ?>">
+                                View Details
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -340,11 +355,11 @@ $recommendedBooks = getTopRatedBooks(4);
                                     <span class="rating-count"><?php echo $rating; ?></span>
                                 </div>
                                 <p class="card-text book-price">Rs. <?php echo $book['price']; ?></p>
-                                <?php if (isset($book['added_by_is_admin']) && $book['added_by_is_admin'] == 0): ?>
-                                    <span class="used-badge mb-2">Used</span>
+                                <?php if (isset($book['is_old']) && $book['is_old'] == 1): ?>
+                                    <span class="badge bg-secondary used-badge">Used</span>
                                 <?php endif; ?>
                                 <p class="card-text">
-                                    <small class="text-muted">
+                                    <small class="<?php echo $book['quantity'] > 0 ? 'text-success' : 'text-danger'; ?>">
                                         <?php if ($book['quantity'] > 0): ?>
                                             <?php echo $book['quantity']; ?> copies available
                                         <?php else: ?>
@@ -352,7 +367,10 @@ $recommendedBooks = getTopRatedBooks(4);
                                         <?php endif; ?>
                                     </small>
                                 </p>
-                                <a href="book_details.php?id=<?php echo $book['id']; ?>" class="btn btn-primary">View Details</a>
+                                <a href="book_details.php?id=<?php echo $book['id']; ?>" 
+                                   class="btn <?php echo $book['quantity'] > 0 ? 'btn-primary' : 'btn-secondary'; ?>">
+                                    View Details
+                                </a>
                             </div>
                         </div>
                     </div>

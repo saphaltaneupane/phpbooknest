@@ -43,13 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       VALUES ($orderId, $bookId, 1, $totalAmount)";
             
             if (mysqli_query($conn, $query)) {
-        // Immediately update book quantity if available
-        $freshBookData = getBookById($bookId);
-        if ($freshBookData['quantity'] > 0) {
-            updateBookQuantity($bookId, 1);
-        } else {
-            $error = 'Sorry, this book is no longer available.';
-        }
+                // Immediately update book quantity if available
+                $freshBookData = getBookById($bookId);
+                if ($freshBookData['quantity'] > 0) {
+                    updateBookQuantity($bookId, 1);
+                } else {
+                    $error = 'Sorry, this book is no longer available.';
+                }
                 
                 // If payment method is cash on delivery, redirect to success page
                 if ($paymentMethod === 'cash') {

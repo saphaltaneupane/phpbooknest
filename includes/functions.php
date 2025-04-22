@@ -51,12 +51,28 @@ function isValidPhone($phone) {
     return preg_match('/^[0-9]{10}$/', $phone);
 }
 
-// Function to get book by ID
+/**
+ * Function to get book by ID
+ * 
+ * @param int $bookId The ID of the book.
+ * @return array|false Book data or false if not found.
+ */
 function getBookById($bookId) {
     global $conn;
-    $query = "SELECT * FROM books WHERE id = '$bookId'";
+    
+    // Include join with users table to get user info for admin books
+    $query = "SELECT books.*, users.name as added_by_name, users.is_admin as added_by_is_admin 
+              FROM books 
+              LEFT JOIN users ON books.added_by = users.id 
+              WHERE books.id = '$bookId'";
+    
     $result = mysqli_query($conn, $query);
-    return mysqli_fetch_assoc($result);
+    
+    if ($result && mysqli_num_rows($result) > 0) {
+        return mysqli_fetch_assoc($result);
+    }
+    
+    return false;
 }
 
 /**
@@ -66,13 +82,15 @@ function getTopRatedBooks($limit = 5) {
     global $conn;
 
     // Query to fetch books with their average rating and rating count
-    // Ensure only books with avg_rating >= 4 are included
-    $query = "SELECT books.*, AVG(ratings.rating) as avg_rating, COUNT(ratings.id) as rating_count 
+    // Modified to include admin books regardless of quantity
+    $query = "SELECT books.*, users.is_admin, AVG(ratings.rating) as avg_rating, 
+              COUNT(ratings.id) as rating_count 
               FROM books 
               JOIN ratings ON books.id = ratings.book_id 
-              WHERE books.quantity > 0 
+              LEFT JOIN users ON books.added_by = users.id
+              WHERE (books.quantity > 0) OR (users.is_admin = 1 OR books.added_by IS NULL)
               GROUP BY books.id
-              HAVING avg_rating >= 4"; // Include books with avg_rating equal to or greater than 4
+              HAVING avg_rating >= 4"; 
 
     $result = mysqli_query($conn, $query);
 
@@ -81,8 +99,7 @@ function getTopRatedBooks($limit = 5) {
 
     while ($row = mysqli_fetch_assoc($result)) {
         // Use avg_rating as the primary priority
-        // SplPriorityQueue processes items with higher priority values first
-        $priority = $row['avg_rating']; // Use avg_rating directly for prioritization
+        $priority = $row['avg_rating']; 
         $priorityQueue->insert($row, $priority);
     }
 
@@ -136,15 +153,15 @@ function getAllBooks() {
 }
 
 /**
- * Get available books with quantity > 0.
+ * Get available books - includes all admin books and user books with quantity > 0.
  */
 function getAvailableBooks() {
     global $conn;
     // Join with users table to get added_by info and is_admin status
-    // Note: We only check for quantity > 0, not the status
+    // Modified query to include admin books regardless of quantity
     $query = "SELECT books.*, users.name as added_by_name, users.is_admin as added_by_is_admin FROM books 
               LEFT JOIN users ON books.added_by = users.id 
-              WHERE books.quantity > 0";
+              WHERE (books.quantity > 0) OR (users.is_admin = 1 OR books.added_by IS NULL)";
     $result = mysqli_query($conn, $query);
     $books = [];
     
@@ -318,5 +335,27 @@ function updateBookStatusToSold($orderId) {
             mysqli_query($conn, $updateQuery);
         }
     }
+}
+
+/**
+ * Check if a user has purchased a book with completed status.
+ * 
+ * @param int $userId The ID of the user.
+ * @param int $bookId The ID of the book.
+ * @return bool True if the user has purchased the book with completed status, false otherwise.
+ */
+function hasCompletedPurchase($userId, $bookId) {
+    global $conn;
+    
+    $query = "SELECT o.id FROM orders o 
+              JOIN order_items oi ON o.id = oi.order_id 
+              WHERE o.user_id = $userId 
+              AND oi.book_id = $bookId 
+              AND o.payment_status = 'completed' 
+              AND o.status = 'completed'";
+    
+    $result = mysqli_query($conn, $query);
+    
+    return mysqli_num_rows($result) > 0;
 }
 ?>
