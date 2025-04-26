@@ -173,46 +173,6 @@ function getAvailableBooks() {
 }
 
 /**
- * Decrement the quantity of books in an order.
- * If quantity reaches 0 or less, update book status to 'sold'.
- * 
- * @param int $orderId The ID of the order.
- */
-function decrementBookQuantity($orderId) {
-    global $conn;
-    $query = "SELECT book_id, quantity FROM order_items WHERE order_id = $orderId";
-    $result = mysqli_query($conn, $query);
-    while ($row = mysqli_fetch_assoc($result)) {
-        $bookId = $row['book_id'];
-        $orderQuantity = $row['quantity'] ?? 1;
-        
-        // Get current quantity
-        $qtyQuery = "SELECT quantity FROM books WHERE id = $bookId";
-        $qtyResult = mysqli_query($conn, $qtyQuery);
-        $book = mysqli_fetch_assoc($qtyResult);
-        
-        if ($book) {
-            $currentQuantity = (int)$book['quantity'];
-            
-            // Calculate new quantity
-            $newQuantity = $currentQuantity - $orderQuantity;
-            if ($newQuantity < 0) {
-                $newQuantity = 0;
-            }
-            
-            // Update quantity and status if needed
-            if ($newQuantity == 0) {
-                $updateQuery = "UPDATE books SET quantity = 0, status = 'sold' WHERE id = $bookId";
-            } else {
-                $updateQuery = "UPDATE books SET quantity = $newQuantity WHERE id = $bookId";
-            }
-            
-            mysqli_query($conn, $updateQuery);
-        }
-    }
-}
-
-/**
  * Update book quantity immediately when an order is placed.
  * If quantity reaches 0, update book status to 'sold'.
  * 
@@ -260,7 +220,49 @@ function updateBookQuantity($bookId, $orderQuantity = 1) {
     return false;
 }
 
-// Function to get book rating
+/**
+ * Decrement the quantity of books in an order.
+ * If quantity reaches 0 or less, update book status to 'sold'.
+ * 
+ * @param int $orderId The ID of the order.
+ */
+function decrementBookQuantity($orderId) {
+    global $conn;
+    $query = "SELECT book_id, quantity FROM order_items WHERE order_id = $orderId";
+    $result = mysqli_query($conn, $query);
+    while ($row = mysqli_fetch_assoc($result)) {
+        $bookId = $row['book_id'];
+        $orderQuantity = $row['quantity'] ?? 1;
+        
+        // Get current quantity
+        $qtyQuery = "SELECT quantity FROM books WHERE id = $bookId";
+        $qtyResult = mysqli_query($conn, $qtyQuery);
+        $book = mysqli_fetch_assoc($qtyResult);
+        
+        if ($book) {
+            $currentQuantity = (int)$book['quantity'];
+            
+            // Calculate new quantity
+            $newQuantity = $currentQuantity - $orderQuantity;
+            if ($newQuantity < 0) {
+                $newQuantity = 0;
+            }
+            
+            // Update quantity and status if needed
+            if ($newQuantity == 0) {
+                $updateQuery = "UPDATE books SET quantity = 0, status = 'sold' WHERE id = $bookId";
+            } else {
+                $updateQuery = "UPDATE books SET quantity = $newQuantity WHERE id = $bookId";
+            }
+            
+            mysqli_query($conn, $updateQuery);
+        }
+    }
+}
+
+/**
+ * Function to get book rating
+ */
 function getBookRating($bookId) {
     global $conn;
     $query = "SELECT AVG(rating) as avg_rating FROM ratings WHERE book_id = '$bookId'";
