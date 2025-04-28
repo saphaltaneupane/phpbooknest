@@ -3,7 +3,14 @@ require_once 'includes/header.php';
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    redirect('index.php');
+    $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'index.php';
+    
+    // Only allow certain pages for redirect
+    if ($redirect === 'checkout') {
+        redirect('checkout.php');
+    } else {
+        redirect('index.php');
+    }
 }
 
 $errors = [];
@@ -31,16 +38,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_num_rows($result) === 1) {
             $user = mysqli_fetch_assoc($result);
             
+            // Save cart items before setting session variables
+            $cartItems = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+            
             // Set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['is_admin'] = $user['is_admin'];
             
-            // Redirect based on user role
+            // Restore cart items
+            $_SESSION['cart'] = $cartItems;
+            
+            // Redirect based on user role or redirect parameter
             if ($user['is_admin'] == 1) {
                 redirect('admin/dashboard.php');
             } else {
-                redirect('user/dashboard.php');
+                $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'index.php';
+                
+                // Only allow certain pages for redirect
+                if ($redirect === 'checkout') {
+                    redirect('checkout.php');
+                } else {
+                    redirect('user/dashboard.php');
+                }
             }
         } else {
             $errors['general'] = 'Invalid email or password';

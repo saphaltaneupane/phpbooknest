@@ -60,13 +60,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // If no errors, register the user
     if (empty($errors)) {
+        // Save cart items before registration
+        $cartItems = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+        
         // Insert user into database
         $query = "INSERT INTO users (name, email, phone, password, address)
                   VALUES ('$name', '$email', '$phone', '$password', '$address')";
         
         if (mysqli_query($conn, $query)) {
-            $_SESSION['success_message'] = 'Registration successful! Please login.';
-            redirect('login.php');
+            // Get the new user's ID
+            $newUserId = mysqli_insert_id($conn);
+            
+            // Log the user in
+            $_SESSION['user_id'] = $newUserId;
+            $_SESSION['user_name'] = $name;
+            $_SESSION['is_admin'] = 0;
+            
+            // Restore cart items
+            $_SESSION['cart'] = $cartItems;
+            
+            // Redirect to checkout if that was the original intention
+            if (isset($_GET['redirect']) && $_GET['redirect'] === 'checkout') {
+                redirect('checkout.php');
+            } else {
+                $_SESSION['success_message'] = 'Registration successful! You are now logged in.';
+                redirect('user/dashboard.php');
+            }
         } else {
             $errors['general'] = 'Registration failed: ' . mysqli_error($conn);
         }

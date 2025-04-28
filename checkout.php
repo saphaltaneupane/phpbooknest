@@ -3,82 +3,106 @@ require_once 'includes/header.php';
 
 // Redirect if not logged in
 if (!isLoggedIn()) {
-    redirect('login.php');
+    // Save current URL as return destination
+    $_SESSION['redirect_after_login'] = 'checkout.php';
+    redirect('login.php?redirect=checkout');
 }
 
-// Get book ID and quantity from URL
-$bookId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$quantity = isset($_GET['quantity']) ? (int)$_GET['quantity'] : 1;
-
-// Make sure quantity is at least 1
-if ($quantity < 1) {
-    $quantity = 1;
-}
-
-// Get book details
-$book = getBookById($bookId);
-
-// If book not found or quantity is 0, redirect to homepage
-if (!$book || $book['quantity'] <= 0) {
-    redirect('index.php');
-}
-
-// Make sure requested quantity doesn't exceed available quantity
-if ($quantity > $book['quantity']) {
-    $quantity = $book['quantity'];
+// Redirect if cart is empty
+if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+    $_SESSION['cart_message'] = 'Your cart is empty. Please add some items before checkout.';
+    redirect('cart.php');
 }
 
 // Get user details
 $userId = $_SESSION['user_id'];
 $user = getUserById($userId);
 
-// Calculate total price based on quantity
-$totalPrice = $book['price'] * $quantity;
+// Calculate total
+$totalAmount = 0;
+foreach ($_SESSION['cart'] as $item) {
+    $totalAmount += $item['price'] * $item['quantity'];
+}
 
 // Handle checkout process
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $paymentMethod = sanitize($_POST['payment_method']);
     
-    // Check book quantity again before processing (in case of concurrent orders)
-    $freshBookData = getBookById($bookId);
-    if ($freshBookData['quantity'] < $quantity) {
-        $error = 'Sorry, the requested quantity is no longer available. Only ' . $freshBookData['quantity'] . ' books are in stock.';
-        $quantity = $freshBookData['quantity'];
-        $totalPrice = $book['price'] * $quantity;
-    } else {
+    // Verify stock for each item before processing
+    $stockError = false;
+    
+    foreach ($_SESSION['cart'] as $item) {
+        $bookId = $item['book_id'];
+        $requestedQuantity = $item['quantity'];
+        
+        // Get fresh book data
+        $freshBookData = getBookById($bookId);
+        
+        if (!$freshBookData || $freshBookData['quantity'] < $requestedQuantity) {
+            $stockError = true;
+            $itemTitle = isset($freshBookData['title']) ? $freshBookData['title'] : $item['title'];
+            $availableQuantity = isset($freshBookData['quantity']) ? $freshBookData['quantity'] : 0;
+            
+            $error = "Sorry, '$itemTitle' only has $availableQuantity copies available.";
+            break;
+        }
+    }
+    
+    if (!$stockError) {
         // Insert order into database
         $query = "INSERT INTO orders (user_id, total_amount, payment_method, status) 
-                  VALUES ($userId, $totalPrice, '$paymentMethod', 'pending')";
+                  VALUES ($userId, $totalAmount, '$paymentMethod', 'pending')";
         
         if (mysqli_query($conn, $query)) {
             $orderId = mysqli_insert_id($conn);
             
-            // Insert order item with specified quantity
-            $query = "INSERT INTO order_items (order_id, book_id, quantity, price) 
-                      VALUES ($orderId, $bookId, $quantity, " . $book['price'] . ")";
+            // Insert order items
+            $insertError = false;
             
-            if (mysqli_query($conn, $query)) {
-                // Immediately update book quantity if available
-                $freshBookData = getBookById($bookId);
-                if ($freshBookData['quantity'] >= $quantity) {
-                    updateBookQuantity($bookId, $quantity);
-                } else {
-                    $error = 'Sorry, this book is no longer available in the requested quantity.';
+            foreach ($_SESSION['cart'] as $item) {
+                $bookId = $item['book_id'];
+                $itemQuantity = $item['quantity'];
+                $itemPrice = $item['price'];
+                
+                $query = "INSERT INTO order_items (order_id, book_id, quantity, price) 
+                          VALUES ($orderId, $bookId, $itemQuantity, $itemPrice)";
+                
+                if (!mysqli_query($conn, $query)) {
+                    $insertError = true;
+                    $error = 'Error adding order item: ' . mysqli_error($conn);
+                    break;
                 }
                 
-                // If payment method is cash on delivery, redirect to success page
+                // Update book quantity
+                $freshBookData = getBookById($bookId);
+                if ($freshBookData && $freshBookData['quantity'] >= $itemQuantity) {
+                    updateBookQuantity($bookId, $itemQuantity);
+                } else {
+                    $insertError = true;
+                    $error = 'Sorry, one or more books are no longer available in the requested quantity.';
+                    break;
+                }
+            }
+            
+            // If no errors inserting items, process payment
+            if (!$insertError) {
+                // Clear cart
+                $_SESSION['cart'] = [];
+                
+                // Redirect based on payment method
                 if ($paymentMethod === 'cash') {
                     $_SESSION['success_message'] = 'Order placed successfully! Your order will be delivered soon.';
                     redirect('payment_success.php?order_id=' . $orderId);
                 } else {
                     // For Khalti payment, initialize payment and redirect
                     $_SESSION['order_id'] = $orderId;
-                    $_SESSION['book_id'] = $bookId;
-                    $_SESSION['amount'] = $totalPrice;
+                    $_SESSION['amount'] = $totalAmount;
                     redirect('khalti_payment.php');
                 }
             } else {
-                $error = 'Error adding order item: ' . mysqli_error($conn);
+                // If error occurred after order was created, delete the order
+                $deleteQuery = "DELETE FROM orders WHERE id = $orderId";
+                mysqli_query($conn, $deleteQuery);
             }
         } else {
             $error = 'Error placing order: ' . mysqli_error($conn);
@@ -285,70 +309,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </style>
 
 <div class="checkout-container">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="checkout-card">
-                <div class="checkout-header">
-                    <h3 class="mb-0">Checkout</h3>
-                </div>
-                <div class="checkout-body">
-                    <?php if (isset($error)): ?>
-                        <div class="alert alert-danger"><?php echo $error; ?></div>
-                    <?php endif; ?>
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <div class="book-image-container">
-                                <img src="assets/images/<?php echo $book['image']; ?>" class="img-fluid rounded" alt="<?php echo $book['title']; ?>">
-                            </div>
+    <div class="checkout-header">
+        <h1 class="checkout-title">Checkout</h1>
+        <p class="checkout-subtitle">Complete your purchase</p>
+    </div>
+    
+    <?php if (isset($error)): ?>
+        <div class="alert alert-danger"><?php echo $error; ?></div>
+    <?php endif; ?>
+    
+    <form action="checkout.php" method="POST">
+        <div class="checkout-row">
+            <div class="checkout-col checkout-col-7">
+                <div class="checkout-section">
+                    <h3 class="checkout-section-title">Shipping Information</h3>
+                    <div class="user-details">
+                        <div class="user-detail">
+                            <span class="user-detail-label">Name:</span>
+                            <span class="user-detail-value"><?php echo $user['name']; ?></span>
                         </div>
-                        <div class="col-md-8 book-details">
-                            <h4 class="book-title"><?php echo $book['title']; ?></h4>
-                            <p class="book-author">by <?php echo $book['author']; ?></p>
-                            
-                            <div class="price-info">
-                                <p><strong>Price per copy:</strong> Rs. <?php echo number_format($book['price'], 2); ?></p>
-                                <p><strong>Quantity:</strong> <?php echo $quantity; ?></p>
-                                <p class="mb-0"><strong>Total Price:</strong> Rs. <?php echo number_format($totalPrice, 2); ?></p>
+                        <div class="user-detail">
+                            <span class="user-detail-label">Email:</span>
+                            <span class="user-detail-value"><?php echo $user['email']; ?></span>
+                        </div>
+                        <div class="user-detail">
+                            <span class="user-detail-label">Phone:</span>
+                            <span class="user-detail-value"><?php echo $user['phone']; ?></span>
+                        </div>
+                        <div class="user-detail">
+                            <span class="user-detail-label">Address:</span>
+                            <span class="user-detail-value"><?php echo $user['address']; ?></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="checkout-section">
+                    <h3 class="checkout-section-title">Payment Method</h3>
+                    <div class="payment-options">
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="cash" class="payment-radio" checked>
+                            <span class="payment-label">Cash on Delivery</span>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="khalti" class="payment-radio">
+                            <span class="payment-label">Pay with Khalti</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checkout-col checkout-col-5">
+                <div class="checkout-section order-summary">
+                    <h3 class="checkout-section-title">Order Summary</h3>
+                    <div class="cart-items">
+                        <?php foreach ($_SESSION['cart'] as $item): ?>
+                            <div class="cart-item">
+                                <img src="assets/images/<?php echo $item['image']; ?>" alt="<?php echo $item['title']; ?>" class="cart-item-image">
+                                <div class="cart-item-details">
+                                    <h5 class="cart-item-title"><?php echo $item['title']; ?></h5>
+                                    <p class="cart-item-author">by <?php echo $item['author']; ?></p>
+                                    <p class="cart-item-price">Rs. <?php echo number_format($item['price'], 2); ?></p>
+                                </div>
+                                <div class="cart-item-quantity">×<?php echo $item['quantity']; ?></div>
                             </div>
-                            
-                            <span class="quantity-badge <?php echo ($book['quantity'] < 5) ? 'low-stock' : ''; ?>">
-                                <?php echo $book['quantity']; ?> copies available
-                            </span>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="order-totals">
+                        <div class="order-total-row">
+                            <span class="order-total-label">Subtotal</span>
+                            <span class="order-total-value">Rs. <?php echo number_format($totalAmount, 2); ?></span>
+                        </div>
+                        <div class="order-total-row">
+                            <span class="order-total-label">Shipping</span>
+                            <span class="order-total-value">Free</span>
+                        </div>
+                        <div class="order-total-row grand-total">
+                            <span class="order-total-label">Total</span>
+                            <span class="order-total-value">Rs. <?php echo number_format($totalAmount, 2); ?></span>
                         </div>
                     </div>
                     
-                    <form action="checkout.php?id=<?php echo $bookId; ?>&quantity=<?php echo $quantity; ?>" method="POST">
-                        <h5 class="section-title">Shipping Information</h5>
-                        <div class="user-info mb-4">
-                            <p><strong>Name:</strong> <?php echo $user['name']; ?></p>
-                            <p><strong>Email:</strong> <?php echo $user['email']; ?></p>
-                            <p><strong>Phone:</strong> <?php echo $user['phone']; ?></p>
-                            <p class="mb-0"><strong>Address:</strong> <?php echo $user['address']; ?></p>
-                        </div>
-                        
-                        <h5 class="section-title">Payment Method</h5>
-                        <div class="payment-options mb-4">
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="payment_method" id="cash" value="cash" checked>
-                                <label class="form-check-label payment-method-label" for="cash">
-                                    Cash on Delivery
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="khalti" value="khalti">
-                                <label class="form-check-label payment-method-label" for="khalti">
-                                    Pay with Khalti
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="order-button">Place Order</button>
-                    </form>
+                    <button type="submit" class="checkout-btn">Place Order</button>
+                    <a href="cart.php" class="back-to-cart">
+                        <i class="bi bi-arrow-left"></i> Back to Cart
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 
 <?php require_once 'includes/footer.php'; ?>

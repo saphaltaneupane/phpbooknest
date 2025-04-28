@@ -576,71 +576,98 @@ $avgRating = getBookRating($bookId);
         <div class="book-description"><?php echo $book['description']; ?></div>
         
         <?php if ($book['quantity'] > 0): ?>
-            <?php if (isLoggedIn()): ?>
-                <div class="quantity-container">
-                    <label for="quantity" class="quantity-label">Quantity:</label>
-                    <div class="quantity-controls">
-                        <button type="button" id="decrease-quantity" class="quantity-btn">-</button>
-                        <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="<?php echo $book['quantity']; ?>">
-                        <button type="button" id="increase-quantity" class="quantity-btn">+</button>
-                    </div>
-                    <div class="quantity-max">Maximum available: <?php echo $book['quantity']; ?></div>
+            <div class="quantity-container">
+                <label for="quantity" class="quantity-label">Quantity:</label>
+                <div class="quantity-controls">
+                    <button type="button" id="decrease-quantity" class="quantity-btn">-</button>
+                    <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="<?php echo $book['quantity']; ?>">
+                    <button type="button" id="increase-quantity" class="quantity-btn">+</button>
                 </div>
-                <a href="checkout.php?id=<?php echo $book['id']; ?>&quantity=1" id="buy-now-btn" class="buy-btn">Buy Now</a>
-                
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const quantityInput = document.getElementById('quantity');
-                        const decreaseBtn = document.getElementById('decrease-quantity');
-                        const increaseBtn = document.getElementById('increase-quantity');
-                        const buyNowBtn = document.getElementById('buy-now-btn');
-                        const maxQuantity = <?php echo $book['quantity']; ?>;
-                        
-                        // Function to update the Buy Now button URL
-                        function updateBuyNowUrl() {
-                            const quantity = parseInt(quantityInput.value);
-                            const bookId = <?php echo $book['id']; ?>;
-                            buyNowBtn.href = `checkout.php?id=${bookId}&quantity=${quantity}`;
+                <div class="quantity-max">Maximum available: <?php echo $book['quantity']; ?></div>
+            </div>
+            <button id="add-to-cart-btn" class="cart-btn">Add to Cart</button>
+            <div id="cart-message" class="cart-message cart-success"></div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const quantityInput = document.getElementById('quantity');
+                    const decreaseBtn = document.getElementById('decrease-quantity');
+                    const increaseBtn = document.getElementById('increase-quantity');
+                    const addToCartBtn = document.getElementById('add-to-cart-btn');
+                    const cartMessage = document.getElementById('cart-message');
+                    const maxQuantity = <?php echo $book['quantity']; ?>;
+                    
+                    // Decrease quantity button
+                    decreaseBtn.addEventListener('click', function() {
+                        let quantity = parseInt(quantityInput.value);
+                        if (quantity > 1) {
+                            quantityInput.value = quantity - 1;
                         }
+                    });
+                    
+                    // Increase quantity button
+                    increaseBtn.addEventListener('click', function() {
+                        let quantity = parseInt(quantityInput.value);
+                        if (quantity < maxQuantity) {
+                            quantityInput.value = quantity + 1;
+                        }
+                    });
+                    
+                    // Manual input change
+                    quantityInput.addEventListener('change', function() {
+                        let quantity = parseInt(this.value);
                         
-                        // Decrease quantity button
-                        decreaseBtn.addEventListener('click', function() {
-                            let quantity = parseInt(quantityInput.value);
-                            if (quantity > 1) {
-                                quantityInput.value = quantity - 1;
-                                updateBuyNowUrl();
-                            }
-                        });
+                        // Validate quantity
+                        if (isNaN(quantity) || quantity < 1) {
+                            this.value = 1;
+                        } else if (quantity > maxQuantity) {
+                            this.value = maxQuantity;
+                        }
+                    });
+                    
+                    // Add to cart button
+                    addToCartBtn.addEventListener('click', function() {
+                        const quantity = parseInt(quantityInput.value);
+                        const bookId = <?php echo $book['id']; ?>;
                         
-                        // Increase quantity button
-                        increaseBtn.addEventListener('click', function() {
-                            let quantity = parseInt(quantityInput.value);
-                            if (quantity < maxQuantity) {
-                                quantityInput.value = quantity + 1;
-                                updateBuyNowUrl();
+                        // Send AJAX request to add item to cart
+                        fetch('add_to_cart.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `book_id=${bookId}&quantity=${quantity}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                cartMessage.textContent = data.message;
+                                cartMessage.style.display = 'block';
+                                
+                                // Update cart count in header if it exists
+                                const cartCountElement = document.getElementById('cart-count');
+                                if (cartCountElement) {
+                                    cartCountElement.textContent = data.cartCount;
+                                    cartCountElement.style.display = 'inline-block';
+                                }
+                                
+                                // Hide message after 3 seconds
+                                setTimeout(() => {
+                                    cartMessage.style.display = 'none';
+                                }, 3000);
+                            } else {
+                                alert(data.message);
                             }
-                        });
-                        
-                        // Manual input change
-                        quantityInput.addEventListener('change', function() {
-                            let quantity = parseInt(this.value);
-                            
-                            // Validate quantity
-                            if (isNaN(quantity) || quantity < 1) {
-                                this.value = 1;
-                            } else if (quantity > maxQuantity) {
-                                this.value = maxQuantity;
-                            }
-                            
-                            updateBuyNowUrl();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while adding to cart.');
                         });
                     });
-                </script>
-            <?php else: ?>
-                <a href="login.php" class="buy-btn">Login to Buy</a>
-            <?php endif; ?>
+                });
+            </script>
         <?php else: ?>
-            <button class="buy-btn" disabled>Out of Stock</button>
+            <button class="cart-btn" disabled>Out of Stock</button>
         <?php endif; ?>
     </div>
 </div>

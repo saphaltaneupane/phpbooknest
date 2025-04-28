@@ -587,6 +587,24 @@ if (session_status() == PHP_SESSION_NONE) {
                 <?php endif; ?>
                 <ul class="navbar-nav">
                     <?php if (isLoggedIn()): ?>
+                        <li class="nav-item">
+                            <a href="<?php echo $relativePath; ?>cart.php" class="nav-link position-relative">
+                                <i class="bi bi-cart3" style="font-size: 1.2rem;"></i>
+                                <?php 
+                                $cartCount = 0;
+                                if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
+                                    foreach ($_SESSION['cart'] as $item) {
+                                        $cartCount += $item['quantity'];
+                                    }
+                                }
+                                if ($cartCount > 0): 
+                                ?>
+                                <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    <?php echo $cartCount; ?>
+                                </span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button">
                                 <div class="d-flex align-items-center">
