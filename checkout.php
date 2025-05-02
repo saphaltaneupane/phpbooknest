@@ -73,14 +73,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
                 }
                 
-                // Update book quantity
-                $freshBookData = getBookById($bookId);
-                if ($freshBookData && $freshBookData['quantity'] >= $itemQuantity) {
-                    updateBookQuantity($bookId, $itemQuantity);
-                } else {
-                    $insertError = true;
-                    $error = 'Sorry, one or more books are no longer available in the requested quantity.';
-                    break;
+                // For Khalti payments, we'll update inventory after payment verification
+                // Only update inventory immediately for Cash on Delivery
+                if ($paymentMethod === 'cash') {
+                    $freshBookData = getBookById($bookId);
+                    if ($freshBookData && $freshBookData['quantity'] >= $itemQuantity) {
+                        updateBookQuantity($bookId, $itemQuantity);
+                    } else {
+                        $insertError = true;
+                        $error = 'Sorry, one or more books are no longer available in the requested quantity.';
+                        break;
+                    }
                 }
             }
             

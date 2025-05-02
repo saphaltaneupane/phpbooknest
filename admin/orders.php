@@ -13,8 +13,28 @@ $limit = 10; // Number of orders per page
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
+// Filter options
+$filterStatus = isset($_GET['status']) ? $_GET['status'] : '';
+$filterPayment = isset($_GET['payment']) ? $_GET['payment'] : '';
+$filterMethod = isset($_GET['method']) ? $_GET['method'] : '';
+
+// Build where clause for filters
+$whereClause = "1=1"; // Always true condition to start with
+if (!empty($filterStatus)) {
+    $filterStatus = sanitize($filterStatus);
+    $whereClause .= " AND o.status = '$filterStatus'";
+}
+if (!empty($filterPayment)) {
+    $filterPayment = sanitize($filterPayment);
+    $whereClause .= " AND o.payment_status = '$filterPayment'";
+}
+if (!empty($filterMethod)) {
+    $filterMethod = sanitize($filterMethod);
+    $whereClause .= " AND o.payment_method = '$filterMethod'";
+}
+
 // Count total orders for pagination
-$countQuery = "SELECT COUNT(*) as total FROM orders";
+$countQuery = "SELECT COUNT(*) as total FROM orders o WHERE $whereClause";
 $countResult = mysqli_query($conn, $countQuery);
 $totalOrders = mysqli_fetch_assoc($countResult)['total'];
 $totalPages = ceil($totalOrders / $limit);
@@ -22,6 +42,7 @@ $totalPages = ceil($totalOrders / $limit);
 // Get orders for current page
 $query = "SELECT o.*, u.name as user_name FROM orders o 
           JOIN users u ON o.user_id = u.id 
+          WHERE $whereClause
           ORDER BY o.created_at DESC
           LIMIT $offset, $limit";
 $result = mysqli_query($conn, $query);
@@ -499,8 +520,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($orders as $order): ?>
-                                        <tr>
+                                    <?php foreach ($orders as $order): 
+                                        $rowClass = '';
+                                        if ($order['payment_method'] === 'cash' && $order['payment_status'] === 'pending') {
+                                            $rowClass = 'cod-highlight';
+                                        } elseif ($order['payment_method'] === 'cash' && $order['payment_status'] === 'completed' && $order['status'] === 'completed') {
+                                            $rowClass = 'cod-completed';
+                                        }
+                                    ?>
+                                        <tr class="<?php echo $rowClass; ?>">
                                             <td>#<?php echo $order['id']; ?></td>
                                             <td><?php echo htmlspecialchars($order['user_name']); ?></td>
                                             <td><?php echo date('M d, Y', strtotime($order['created_at'])); ?></td>
@@ -517,9 +545,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
                                                 </span>
                                             </td>
                                             <td>
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="openModal('orderModal<?php echo $order['id']; ?>')">
-                                                    View Details
-                                                </button>
+                                                <div class="action-btns">
+                                                    <button type="button" class="btn btn-primary btn-sm" onclick="openModal('orderModal<?php echo $order['id']; ?>')">
+                                                        Manage
+                                                    </button>
+                                                    <a href="<?php echo $relativePath; ?>invoice.php?id=<?php echo $order['id']; ?>" class="btn btn-sm invoice-btn">
+                                                        Invoice
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

@@ -231,28 +231,21 @@ $orders = getUserOrders($userId);
             <table class="orders-table">
                 <thead>
                     <tr>
-                        <th>Book Name</th>
+                        <th>Order ID</th>
                         <th>Date</th>
-                        <th>Amount</th>
+                        <th>Total</th>
                         <th>Payment Method</th>
                         <th>Payment Status</th>
                         <th>Order Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($orders as $order): ?>
                         <tr>
-                            <td data-label="Book Name">
-                                <?php 
-                                $items = getOrderItems($order['id']);
-                                echo $items[0]['title'];
-                                if (count($items) > 1) {
-                                    echo ' + '.(count($items)-1).' more';
-                                }
-                                ?>
-                            </td>
+                            <td data-label="Order ID">#<?php echo $order['id']; ?></td>
                             <td data-label="Date"><?php echo date('M d, Y', strtotime($order['created_at'])); ?></td>
-                            <td data-label="Amount">Rs. <?php echo number_format($order['total_amount'], 2); ?></td>
+                            <td data-label="Total">Rs. <?php echo number_format($order['total_amount'], 2); ?></td>
                             <td data-label="Payment Method"><?php echo ucfirst($order['payment_method']); ?></td>
                             <td data-label="Payment Status">
                                 <span class="status-badge status-<?php echo $order['payment_status'] === 'completed' ? 'success' : ($order['payment_status'] === 'pending' ? 'warning' : 'danger'); ?>">
@@ -263,6 +256,14 @@ $orders = getUserOrders($userId);
                                 <span class="status-badge status-<?php echo $order['status'] === 'completed' ? 'success' : ($order['status'] === 'pending' ? 'warning' : ($order['status'] === 'cancelled' ? 'danger' : 'info')); ?>">
                                     <?php echo ucfirst($order['status']); ?>
                                 </span>
+                            </td>
+                            <td data-label="Actions">
+                                <a href="<?php echo $relativePath; ?>payment_success.php?order_id=<?php echo $order['id']; ?>&status=success" class="action-button view-button">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="<?php echo $relativePath; ?>invoice.php?id=<?php echo $order['id']; ?>" class="action-button invoice-button">
+                                    <i class="bi bi-file-earmark-text"></i> Invoice
+                                </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

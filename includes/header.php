@@ -586,25 +586,27 @@ if (session_status() == PHP_SESSION_NONE) {
                     </form>
                 <?php endif; ?>
                 <ul class="navbar-nav">
-                    <!-- Cart Icon (visible to all users) -->
-                    <li class="nav-item">
-                        <a href="<?php echo $relativePath; ?>cart.php" class="nav-link position-relative">
-                            <i class="bi bi-cart3" style="font-size: 1.2rem;"></i>
-                            <?php 
-                            $cartCount = 0;
-                            if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
-                                foreach ($_SESSION['cart'] as $item) {
-                                    $cartCount += $item['quantity'];
+                    <!-- Cart Icon (visible to all users except admin) -->
+                    <?php if (!isAdmin()): ?>
+                        <li class="nav-item">
+                            <a href="<?php echo $relativePath; ?>cart.php" class="nav-link position-relative">
+                                <i class="bi bi-cart3" style="font-size: 1.2rem;"></i>
+                                <?php 
+                                $cartCount = 0;
+                                if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
+                                    foreach ($_SESSION['cart'] as $item) {
+                                        $cartCount += $item['quantity'];
+                                    }
                                 }
-                            }
-                            if ($cartCount > 0): 
-                            ?>
-                            <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                <?php echo $cartCount; ?>
-                            </span>
-                            <?php endif; ?>
-                        </a>
-                    </li>
+                                if ($cartCount > 0): 
+                                ?>
+                                <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    <?php echo $cartCount; ?>
+                                </span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                     
                     <!-- User Menu (only for logged in users) -->
                     <?php if (isLoggedIn()): ?>
@@ -622,6 +624,14 @@ if (session_status() == PHP_SESSION_NONE) {
                                 <?php endif; ?>
                                 <li><a class="dropdown-item" href="<?php echo $relativePath; ?>logout.php">Logout</a></li>
                             </ul>
+                        </li>
+                    <?php else: ?>
+                        <!-- Login and Register Links for Unauthenticated Users -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?php echo $relativePath; ?>login.php">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?php echo $relativePath; ?>register.php">Register</a>
                         </li>
                     <?php endif; ?>
                 </ul>

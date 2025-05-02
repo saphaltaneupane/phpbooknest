@@ -173,8 +173,7 @@ function getAvailableBooks() {
 }
 
 /**
- * Update book quantity immediately when an order is placed.
- * If quantity reaches 0, update book status to 'sold'.
+ * Update book quantity after confirmed purchase.
  * 
  * @param int $bookId The ID of the book.
  * @param int $orderQuantity The quantity being ordered.
@@ -183,41 +182,46 @@ function getAvailableBooks() {
 function updateBookQuantity($bookId, $orderQuantity = 1) {
     global $conn;
     
-    // Get current book information including added_by and status
-    $query = "SELECT quantity, added_by, status FROM books WHERE id = $bookId";
+    // Log the function call for debugging
+    error_log("Updating book quantity: Book ID=$bookId, Quantity=$orderQuantity");
+    
+    // Get current book information
+    $query = "SELECT quantity, status FROM books WHERE id = $bookId";
     $result = mysqli_query($conn, $query);
     
-    if ($result && $book = mysqli_fetch_assoc($result)) {
-        $currentQuantity = (int)$book['quantity'];
-        $addedBy = $book['added_by'];
-        $currentStatus = $book['status'];
-        
-        // Calculate new quantity
-        $newQuantity = $currentQuantity - $orderQuantity;
-        
-        // Prevent negative quantity
-        if ($newQuantity < 0) {
-            $newQuantity = 0;
-        }
-        
-        // Determine new status
-        $newStatus = $currentStatus;
-        
-        if ($newQuantity == 0) {
-            // If quantity is 0, mark as sold
-            $newStatus = 'sold';
-        } else {
-            // If quantity > 0, always set status to available
-            $newStatus = 'available';
-        }
-        
-        // Update book quantity and status
-        $updateQuery = "UPDATE books SET quantity = $newQuantity, status = '$newStatus' WHERE id = $bookId";
-        
-        return mysqli_query($conn, $updateQuery);
+    if (!$result) {
+        error_log("Query error in updateBookQuantity: " . mysqli_error($conn));
+        return false;
     }
     
-    return false;
+    if (mysqli_num_rows($result) === 0) {
+        error_log("Book ID $bookId not found");
+        return false;
+    }
+    
+    $book = mysqli_fetch_assoc($result);
+    $currentQuantity = (int)$book['quantity'];
+    
+    // Calculate new quantity
+    $newQuantity = $currentQuantity - $orderQuantity;
+    
+    // Prevent negative quantity
+    if ($newQuantity < 0) {
+        $newQuantity = 0;
+    }
+    
+    // Determine new status
+    $newStatus = $newQuantity > 0 ? 'available' : 'sold';
+    
+    // Update book quantity and status
+    $updateQuery = "UPDATE books SET quantity = $newQuantity, status = '$newStatus' WHERE id = $bookId";
+    $updateResult = mysqli_query($conn, $updateQuery);
+    
+    if (!$updateResult) {
+        error_log("Update error in updateBookQuantity: " . mysqli_error($conn));
+    }
+    
+    return $updateResult;
 }
 
 /**
