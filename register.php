@@ -185,14 +185,15 @@ require_once 'includes/header.php';
         font-size: 0.95rem;
     }
     
+    /* Form controls with visible black text */
     .form-control {
         width: 100%;
         border-radius: 8px;
         padding: 12px 15px;
         border: 1px solid #dce1e6;
         transition: all 0.25s ease;
-        background-color: #f9fbfd;
-        color: #333;
+        background-color: white;
+        color: black; /* Always black text */
         font-size: 16px;
     }
     
@@ -200,17 +201,17 @@ require_once 'includes/header.php';
         outline: none;
         border-color: #6c63ff;
         box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.15);
-        background-color: #fff;
+        background-color: white;
     }
     
     .form-control.is-invalid {
         border-color: #dc3545;
-        background-color: #fff;
+        background-color: white;
     }
     
     .form-text {
         display: block;
-        color: #6c757d;
+        color: #495057;
         font-size: 0.85rem;
         margin-top: 5px;
     }
@@ -278,6 +279,61 @@ require_once 'includes/header.php';
     .text-center a:hover {
         color: #5652db;
         text-decoration: underline;
+    }
+    
+    /* Dark mode support - only for non-form elements */
+    @media (prefers-color-scheme: dark) {
+        .register-card {
+            background-color: #2c2c2c;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .register-header {
+            background-color: #5652db;
+        }
+        
+        .form-label {
+            color: #e0e0e0;
+        }
+        
+        /* Keep form background white and text black in dark mode */
+        .form-control {
+            background-color: white;
+            color: black;
+            border-color: #4a4a4a;
+        }
+        
+        .form-control:focus {
+            border-color: #7d76ff;
+            background-color: white;
+            color: black;
+        }
+        
+        .form-text {
+            color: #bbb;
+        }
+        
+        .text-center p {
+            color: #aaa;
+        }
+        
+        .text-center a {
+            color: #8c85ff;
+        }
+        
+        .text-center a:hover {
+            color: #9e99ff;
+        }
+        
+        .alert-danger {
+            background-color: #441c24;
+            color: #f8d7da;
+            border: 1px solid #72242f;
+        }
+        
+        .error-feedback {
+            color: #ff6b7d;
+        }
     }
     
     /* Responsive adjustments */

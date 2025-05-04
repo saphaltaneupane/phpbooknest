@@ -76,44 +76,280 @@ function getBookById($bookId) {
 }
 
 /**
- * Function to get top rated books (using priority queue concept).
+ * Function to get top rated books (4+ stars) as fallback recommendation.
+ * @param int $limit The maximum number of recommendations to return.
+ * @return array The recommended books.
  */
 function getTopRatedBooks($limit = 5) {
     global $conn;
 
-    // Query to fetch books with their average rating and rating count
-    // Modified to include admin books regardless of quantity
-    $query = "SELECT books.*, users.is_admin, AVG(ratings.rating) as avg_rating, 
+    // Query to fetch books with average rating of 4 or higher
+    $query = "SELECT books.*, 
+              COALESCE(AVG(ratings.rating), 0) as avg_rating, 
               COUNT(ratings.id) as rating_count 
               FROM books 
-              JOIN ratings ON books.id = ratings.book_id 
-              LEFT JOIN users ON books.added_by = users.id
-              WHERE (books.quantity > 0) OR (users.is_admin = 1 OR books.added_by IS NULL)
+              LEFT JOIN ratings ON books.id = ratings.book_id 
+              WHERE books.quantity > 0 AND books.status = 'available'
               GROUP BY books.id
-              HAVING avg_rating >= 4"; 
-
+              HAVING avg_rating >= 4
+              ORDER BY avg_rating DESC, rating_count DESC
+              LIMIT $limit";
+    
     $result = mysqli_query($conn, $query);
-
-    // Use SplPriorityQueue to store books based on avg_rating and rating_count
-    $priorityQueue = new SplPriorityQueue();
-
-    while ($row = mysqli_fetch_assoc($result)) {
-        // Use avg_rating as the primary priority
-        $priority = $row['avg_rating']; 
-        $priorityQueue->insert($row, $priority);
+    
+    if (!$result || mysqli_num_rows($result) == 0) {
+        error_log("No high-rated books found or error in getTopRatedBooks: " . mysqli_error($conn));
+        
+        // If no books with rating ≥ 4, use any available books
+        $fallbackQuery = "SELECT books.*, COALESCE(AVG(ratings.rating), 0) as avg_rating,
+                         COUNT(ratings.id) as rating_count  
+                         FROM books 
+                         LEFT JOIN ratings ON books.id = ratings.book_id
+                         WHERE books.quantity > 0 AND books.status = 'available' 
+                         GROUP BY books.id
+                         ORDER BY avg_rating DESC, books.id DESC
+                         LIMIT $limit";
+        $fallbackResult = mysqli_query($conn, $fallbackQuery);
+        
+        if (!$fallbackResult) {
+            return [];
+        }
+        
+        $books = [];
+        while ($row = mysqli_fetch_assoc($fallbackResult)) {
+            $books[] = $row;
+        }
+        
+        return $books;
     }
-
-    // Extract top-rated books
-    $priorityQueue->setExtractFlags(SplPriorityQueue::EXTR_DATA);
+    
     $books = [];
-    $count = 0;
-
-    while (!$priorityQueue->isEmpty() && $count < $limit) {
-        $books[] = $priorityQueue->extract();
-        $count++;
+    while ($row = mysqli_fetch_assoc($result)) {
+        $books[] = $row;
     }
-
+    
     return $books;
+}
+
+/**
+ * Get books that a user has purchased or rated highly.
+ * @param int $userId The user ID
+ * @return array Array of preferred books
+ */
+function getUserPreferredBooks($userId) {
+    global $conn;
+    $userBooks = [];
+    
+    // Get books user has purchased with COMPLETED orders and payment status
+    $query = "SELECT DISTINCT b.* FROM books b
+              JOIN order_items oi ON b.id = oi.book_id
+              JOIN orders o ON oi.order_id = o.id
+              WHERE o.user_id = $userId
+              AND o.status IN ('completed', 'processing', 'shipped')
+              AND o.payment_status = 'completed'";
+    
+    $result = mysqli_query($conn, $query);
+    
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $userBooks[$row['id']] = $row;
+        }
+    } else {
+        error_log("Error getting purchased books: " . mysqli_error($conn));
+    }
+    
+    // Get books user has rated 4 or higher (genuinely preferred)
+    $query = "SELECT DISTINCT b.* FROM books b
+              JOIN ratings r ON b.id = r.book_id
+              WHERE r.user_id = $userId
+              AND r.rating >= 4";
+    
+    $result = mysqli_query($conn, $query);
+    
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $userBooks[$row['id']] = $row;
+        }
+    } else {
+        error_log("Error getting rated books: " . mysqli_error($conn));
+    }
+    
+    // Log for debugging
+    error_log("Found " . count($userBooks) . " preferred books for user $userId");
+    
+    return array_values($userBooks);
+}
+
+/**
+ * Extract meaningful keywords from a string.
+ * @param string $string The input string
+ * @return array Array of keywords
+ */
+function extractKeywords($string) {
+    if (empty($string)) return [];
+    
+    // Convert to lowercase
+    $string = strtolower($string);
+    
+    // Remove punctuation
+    $string = preg_replace('/[^\w\s]/', ' ', $string);
+    
+    // Split into words
+    $words = preg_split('/\s+/', $string, -1, PREG_SPLIT_NO_EMPTY);
+    
+    // Remove common stop words
+    $stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'of', 
+                 'is', 'are', 'was', 'were', 'this', 'that', 'these', 'those', 'it', 'they', 'them', 
+                 'their', 'his', 'her', 'he', 'she', 'we', 'you', 'i', 'am', 'been', 'being', 'have', 'has',
+                 'from', 'will', 'would', 'could', 'should', 'can', 'may', 'might', 'must', 'shall'];
+    $words = array_diff($words, $stopWords);
+    
+    // Filter out very short words (less than 3 characters)
+    $words = array_filter($words, function($word) {
+        return strlen($word) >= 3;
+    });
+    
+    // Return unique keywords
+    return array_values(array_unique($words));
+}
+
+/**
+ * Calculate similarity score between two books based on their attributes.
+ * @param array $book1 First book data
+ * @param array $book2 Second book data
+ * @return float Similarity score
+ */
+function calculateBookSimilarity($book1, $book2) {
+    $score = 0;
+    
+    // Author similarity (highest weight - 4 points)
+    if (strtolower(trim($book1['author'])) === strtolower(trim($book2['author']))) {
+        $score += 4;
+    }
+    
+    // Title keyword similarity
+    $title1Keywords = extractKeywords($book1['title']);
+    $title2Keywords = extractKeywords($book2['title']);
+    $commonTitleWords = array_intersect($title1Keywords, $title2Keywords);
+    $score += count($commonTitleWords) * 0.8; // 0.8 points per common word
+    
+    // Description keyword similarity
+    if (!empty($book1['description']) && !empty($book2['description'])) {
+        $desc1Keywords = extractKeywords($book1['description']);
+        $desc2Keywords = extractKeywords($book2['description']);
+        $commonDescWords = array_intersect($desc1Keywords, $desc2Keywords);
+        $score += count($commonDescWords) * 0.3; // 0.3 points per common word
+    }
+    
+    // Book type similarity (new/used)
+    if (isset($book1['is_old']) && isset($book2['is_old']) && $book1['is_old'] == $book2['is_old']) {
+        $score += 1;
+    }
+    
+    // Price similarity (0-1 points based on how close the prices are)
+    if (isset($book1['price']) && isset($book2['price']) && 
+        $book1['price'] > 0 && $book2['price'] > 0) {
+        $priceRatio = min($book1['price'], $book2['price']) / max($book1['price'], $book2['price']);
+        $score += $priceRatio;
+    }
+    
+    return $score;
+}
+
+/**
+ * Function to get content-based book recommendations for a user.
+ * @param int $userId The ID of the user.
+ * @param int $limit The maximum number of recommendations to return.
+ * @return array The recommended books.
+ */
+function getContentBasedRecommendations($userId, $limit = 5) {
+    global $conn;
+    
+    // Get books this user has purchased or rated highly
+    $userPreferredBooks = getUserPreferredBooks($userId);
+    
+    // If no preferred books, return top rated books as fallback
+    if (empty($userPreferredBooks)) {
+        error_log("User $userId has no preferred books, returning top rated books");
+        return getTopRatedBooks($limit);
+    }
+    
+    // Get all available books
+    $query = "SELECT * FROM books WHERE quantity > 0 AND status = 'available'";
+    $result = mysqli_query($conn, $query);
+    
+    if (!$result) {
+        error_log("Error fetching books for recommendations: " . mysqli_error($conn));
+        return getTopRatedBooks($limit);
+    }
+    
+    $availableBooks = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        // Skip books the user already has interacted with
+        if (!in_array($row['id'], array_column($userPreferredBooks, 'id'))) {
+            $availableBooks[] = $row;
+        }
+    }
+    
+    // If no available books, return top rated
+    if (empty($availableBooks)) {
+        error_log("No available books found for recommendations");
+        return getTopRatedBooks($limit);
+    }
+    
+    // Calculate similarity scores for each available book
+    $scoredBooks = [];
+    foreach ($availableBooks as $book) {
+        $totalScore = 0;
+        $bestScore = 0;
+        
+        // Find best matching score against any user preferred book
+        foreach ($userPreferredBooks as $userBook) {
+            $similarityScore = calculateBookSimilarity($book, $userBook);
+            $totalScore += $similarityScore;
+            
+            if ($similarityScore > $bestScore) {
+                $bestScore = $similarityScore;
+            }
+        }
+        
+        // Average score plus best score to balance breadth and depth
+        $finalScore = ($totalScore / count($userPreferredBooks)) + ($bestScore * 0.5);
+        
+        // Store the book with its similarity score
+        $book['similarity_score'] = $finalScore;
+        $scoredBooks[] = $book;
+    }
+    
+    // Sort books by similarity score (descending)
+    usort($scoredBooks, function($a, $b) {
+        return $b['similarity_score'] <=> $a['similarity_score'];
+    });
+    
+    // Get top N recommendations
+    $recommendations = array_slice($scoredBooks, 0, $limit);
+    
+    // If we couldn't get enough recommendations, fill with top rated books
+    if (count($recommendations) < $limit) {
+        $existingIds = array_column($recommendations, 'id');
+        $additionalBooks = getTopRatedBooks($limit);
+        
+        foreach ($additionalBooks as $book) {
+            if (!in_array($book['id'], $existingIds)) {
+                $recommendations[] = $book;
+                $existingIds[] = $book['id'];
+                if (count($recommendations) >= $limit) {
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Log recommendations for debugging
+    $recIds = array_column($recommendations, 'id');
+    error_log("Recommending books: " . implode(', ', $recIds) . " for user $userId");
+    
+    return $recommendations;
 }
 
 // Function to get user by ID

@@ -5,7 +5,7 @@ require_once $relativePath . 'includes/header.php';
 
 // Redirect if not logged in or is admin
 if (!isLoggedIn() || isAdmin()) {
-    redirect($relativePath . 'login.php');
+    redirect($relativePath . 'index.php');
 }
 
 // Get user ID

@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $author = sanitize($_POST['author']);
     $description = sanitize($_POST['description']);
     $price = sanitize($_POST['price']);
+    $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 1; // Get quantity value
     
     // Validate input
     if (empty($title)) {
@@ -31,6 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['price'] = 'Price is required';
     } elseif (!is_numeric($price) || $price <= 0) {
         $errors['price'] = 'Price must be a positive number';
+    }
+    
+    // Validate quantity
+    if ($quantity <= 0) {
+        $errors['quantity'] = 'Quantity must be a positive number';
     }
     
     // Handle image upload
@@ -70,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If no errors, add book to database
     if (empty($errors)) {
         $query = "INSERT INTO books (title, author, description, price, image, quantity, is_old, status) 
-                  VALUES ('$title', '$author', '$description', '$price', '$targetFile', 1, 0, 'available')";
+                  VALUES ('$title', '$author', '$description', '$price', '$targetFile', $quantity, 0, 'available')";
         
         if (mysqli_query($conn, $query)) {
             $success = true;

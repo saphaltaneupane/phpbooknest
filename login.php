@@ -59,7 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($redirect === 'checkout') {
                     redirect('checkout.php');
                 } else {
-                    redirect('user/dashboard.php');
+                    // Redirect to home page instead of dashboard
+                    redirect('index.php');
                 }
             }
         } else {
@@ -144,6 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         font-size: 16px;
         transition: all 0.3s ease;
         box-sizing: border-box;
+        background-color: white;
+        color: black;
     }
     
     .form-control:focus {
@@ -203,6 +206,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .login-footer a:hover {
         text-decoration: underline;
         color: #5652db;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .login-card {
+            background-color: #2c2c2c;
+        }
+        
+        .login-header {
+            background-color: #5652db;
+        }
+        
+        .form-label {
+            color: #e0e0e0;
+        }
+        
+        /* Form inputs still white with black text */
+        .form-control {
+            background-color: white;
+            color: black;
+            border-color: #4a4a4a;
+        }
+        
+        .login-footer p {
+            color: #adb5bd;
+        }
     }
     
     /* Responsive adjustments */

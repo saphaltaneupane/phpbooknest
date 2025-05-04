@@ -8,8 +8,25 @@ if (isLoggedIn() && isAdmin()) {
 // Get available books
 $books = getAvailableBooks();
 
-// Get top rated books for recommendation
-$recommendedBooks = getTopRatedBooks(4);
+// Get content-based recommendations if user is logged in
+if (isLoggedIn()) {
+    $userId = $_SESSION['user_id'];
+    $userPreferred = getUserPreferredBooks($userId);
+    
+    // Log for debugging
+    error_log("User $userId has " . count($userPreferred) . " preferred books");
+    
+    if (count($userPreferred) > 0) {
+        // User has purchase/rating history, use content-based recommendations
+        $recommendedBooks = getContentBasedRecommendations($userId, 4);
+    } else {
+        // User is logged in but has no history, show top rated books
+        $recommendedBooks = getTopRatedBooks(4);
+    }
+} else {
+    // Not logged in, show top rated books with 4+ stars
+    $recommendedBooks = getTopRatedBooks(4);
+}
 ?>
 
 <style>
@@ -254,6 +271,37 @@ $recommendedBooks = getTopRatedBooks(4);
         color: black !important;
         font-weight: bold;
     }
+    
+    /* Text colors */
+    .text-success {
+        color: #28a745 !important;
+    }
+    
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25em 0.4em;
+        font-size: 75%;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+    
+    .bg-secondary {
+        background-color: #6c757d !important;
+    }
+    
+    .btn-secondary {
+        color: #fff;
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
 </style>
 
 <div class="jumbotron">
@@ -282,7 +330,7 @@ $recommendedBooks = getTopRatedBooks(4);
                             <div class="card-text rating">
                                 <div class="stars">
                                 <?php 
-                                $avgRating = $book['avg_rating'];
+                                $avgRating = isset($book['avg_rating']) ? $book['avg_rating'] : 0;
                                 for ($i = 1; $i <= 5; $i++) {
                                     if ($i <= $avgRating) {
                                         echo '<i class="bi bi-star-fill"></i>';
