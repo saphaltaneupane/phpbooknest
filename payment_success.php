@@ -113,6 +113,10 @@ if (isset($_SESSION['khalti_response']) && isAdmin()) {
         background-color: #dc3545 !important;
     }
     
+    .bg-primary {
+        background-color: #6c63ff !important;
+    }
+    
     .text-white {
         color: #fff !important;
     }
@@ -324,21 +328,53 @@ if (isset($_SESSION['khalti_response']) && isAdmin()) {
         fill: currentColor;
         margin-right: 0.25rem;
     }
+    
+    /* Order status badge */
+    .order-status {
+        display: inline-block;
+        padding: 0.35em 0.65em;
+        font-size: 0.875em;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.375rem;
+        color: #fff;
+    }
+    
+    .status-pending {
+        background-color: #ffc107;
+    }
+    
+    .status-processing {
+        background-color: #17a2b8;
+    }
+    
+    .status-completed {
+        background-color: #28a745;
+    }
+    
+    .status-cancelled {
+        background-color: #dc3545;
+    }
 </style>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header bg-<?php echo $status === 'success' ? 'success' : 'danger'; ?> text-white">
-                    <h3 class="mb-0">
-                        <?php echo $status === 'success' ? 'Payment Successful!' : 'Payment Failed'; ?>
-                    </h3>
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Order Placed</h3>
                 </div>
                 <div class="card-body">
                     <?php if (!empty($message)): ?>
                         <div class="alert alert-<?php echo $status === 'success' ? 'success' : 'danger'; ?>">
                             <?php echo htmlspecialchars($message); ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-success">
+                            Your order has been successfully placed! We'll process it shortly.
                         </div>
                     <?php endif; ?>
                     
@@ -349,8 +385,18 @@ if (isset($_SESSION['khalti_response']) && isAdmin()) {
                         <p><strong>Order ID:</strong> #<?php echo $orderId; ?></p>
                         <p><strong>Date:</strong> <?php echo date('M d, Y h:i A', strtotime($order['created_at'])); ?></p>
                         <p><strong>Payment Method:</strong> <?php echo ucfirst($order['payment_method']); ?></p>
-                        <p><strong>Payment Status:</strong> <?php echo ucfirst($order['payment_status']); ?></p>
-                        <p><strong>Order Status:</strong> <?php echo ucfirst($order['status']); ?></p>
+                        <p>
+                            <strong>Payment Status:</strong> 
+                            <span class="order-status status-<?php echo $order['payment_status']; ?>">
+                                <?php echo ucfirst($order['payment_status']); ?>
+                            </span>
+                        </p>
+                        <p>
+                            <strong>Order Status:</strong> 
+                            <span class="order-status status-<?php echo $order['status']; ?>">
+                                <?php echo ucfirst($order['status']); ?>
+                            </span>
+                        </p>
                         <p><strong>Total Amount:</strong> Rs. <?php echo number_format($order['total_amount'], 2); ?></p>
                         <?php if (!empty($order['transaction_id'])): ?>
                             <p><strong>Transaction ID:</strong> <?php echo $order['transaction_id']; ?></p>
@@ -382,14 +428,14 @@ if (isset($_SESSION['khalti_response']) && isAdmin()) {
                     </div>
                     
                     <div class="text-center mt-4">
-                        <?php if ($status === 'success'): ?>
+                        <?php if ($status === 'success' || $order['payment_status'] === 'completed'): ?>
                             <a href="invoice.php?id=<?php echo $orderId; ?>" class="btn btn-info mb-3">
                                 <i class="bi bi-file-earmark-text"></i> View Invoice
                             </a>
                             <br>
                         <?php elseif ($order['payment_method'] === 'khalti' && $order['payment_status'] !== 'completed'): ?>
                             <a href="khalti_payment.php?retry=<?php echo $orderId; ?>" class="btn btn-primary mb-3">
-                                Try Payment Again
+                                Complete Payment
                             </a>
                             <br>
                         <?php endif; ?>

@@ -96,6 +96,7 @@ $formattedTotal = number_format($total, 2);
     .cart-container {
         max-width: 1000px;
         margin: 0 auto;
+        
     }
     
     .cart-header {
@@ -119,7 +120,7 @@ $formattedTotal = number_format($total, 2);
     }
     
     .cart-empty {
-        background-color: #f9f9f9;
+        background-color:rgb(232, 230, 238);
         padding: 3rem;
         text-align: center;
         border-radius: 8px;
@@ -163,8 +164,8 @@ $formattedTotal = number_format($total, 2);
         display: flex;
         align-items: center;
     }
-    
-    .cart-product-image {
+.
+.cart-product-image {
         width: 80px;
         height: 80px;
         object-fit: cover;
@@ -197,18 +198,20 @@ $formattedTotal = number_format($total, 2);
     }
     
     .cart-footer {
-        background-color: #f9f9f9;
+        background-color:rgb(249, 249, 249);
         padding: 20px;
         border-radius: 8px;
     }
     
     .cart-subtotal, .cart-total {
+        background-color:rgb(243, 243, 248);
         display: flex;
         justify-content: space-between;
         padding: 10px 0;
     }
     
     .cart-total {
+        background-color:rgb(253, 253, 255);
         font-weight: 600;
         font-size: 1.1rem;
         border-top: 1px solid #ddd;
@@ -224,7 +227,7 @@ $formattedTotal = number_format($total, 2);
     }
     
     .cart-update-btn {
-        background-color: #6c63ff;
+        background-color:rgb(68, 68, 154);
         color: white;
         border: none;
         padding: 10px 20px;
@@ -329,7 +332,7 @@ $formattedTotal = number_format($total, 2);
     /* Dark mode */
     @media (prefers-color-scheme: dark) {
         .cart-title {
-            color: #f8f9fa;
+            color: black;
         }
         
         .cart-subtitle, .cart-empty-text {
@@ -354,7 +357,8 @@ $formattedTotal = number_format($total, 2);
             border-color: #495057;
         }
         
-        .cart-product-author {
+        .cart-product-a
+uthor {
             color: #adb5bd;
         }
         
@@ -423,7 +427,7 @@ $formattedTotal = number_format($total, 2);
                             </td>
                             <td data-label="Price">Rs. <?php echo number_format($item['price'], 2); ?></td>
                             <td data-label="Quantity">
-                                <input type="number" name="quantity[<?php echo $item['book_id']; ?>]" value="<?php echo $item['quantity']; ?>" min="1" class="form-control cart-quantity">
+                                <input type="text" name="quantity[<?php echo $item['book_id']; ?>]" value="<?php echo $item['quantity']; ?>" class="cart-quantity" readonly>
                             </td>
                             <td data-label="Total">Rs. <?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
                             <td data-label="Action">
@@ -450,7 +454,7 @@ $formattedTotal = number_format($total, 2);
             <div class="cart-actions">
                 <div>
                     <button type="submit" name="update_cart" class="cart-update-btn">Update Cart</button>
-                    <a href="cart.php?action=clear" class="cart-clear ml-3">Clear Cart</a>
+                    <a href="cart.php?action=clear" class="cart-clear">Clear Cart</a>
                 </div>
                 <a href="index.php" class="continue-shopping">
                     <i class="bi bi-arrow-left"></i> Continue Shopping

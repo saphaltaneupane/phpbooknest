@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 02, 2025 at 04:05 PM
+-- Generation Time: May 05, 2025 at 10:13 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -50,7 +50,12 @@ INSERT INTO `books` (`id`, `title`, `author`, `description`, `price`, `image`, `
 (14, 'admin le rakheko', 'sss', 'sss', 100.00, 'default-book.jpg', 'available', 1, NULL, 0, '2025-04-19 03:40:28'),
 (15, 'admin', 'wwwww', 'www', 100.00, 'default-book.jpg', 'available', 6, NULL, 0, '2025-04-19 04:30:56'),
 (16, 'admin 2', '2222', '222', 100.00, 'default-book.jpg', 'sold', 0, NULL, 0, '2025-04-19 05:13:28'),
-(17, 'admin kept', 'sss', 'sssssss', 100.00, 'default-book.jpg', 'sold', 0, NULL, 0, '2025-04-20 11:06:40');
+(17, 'admin kept', 'sss', 'sssssss', 100.00, 'default-book.jpg', 'sold', 0, NULL, 0, '2025-04-20 11:06:40'),
+(18, 'a Horror', 'J.K rowling', 'sss', 100.00, 'default-book.jpg', 'available', 1, NULL, 0, '2025-05-03 02:35:47'),
+(19, 'a bhoot', 'J.K rowling', 'sss', 100.00, 'default-book.jpg', 'sold', 0, NULL, 0, '2025-05-03 02:36:10'),
+(20, 'a horror 2', 'J.K rowling', 'ss', 100.00, 'default-book.jpg', 'available', 6, NULL, 0, '2025-05-03 02:40:35'),
+(21, 'a ss', 'saphalta', '', 100.00, 'default-book.jpg', 'available', 5, NULL, 0, '2025-05-03 10:50:42'),
+(22, 'a bbb', 'saphalta', 'sss', 100.00, 'default-book.jpg', 'available', 10, NULL, 0, '2025-05-03 10:50:59');
 
 -- --------------------------------------------------------
 
@@ -148,7 +153,13 @@ INSERT INTO `orders` (`id`, `purchase_order_id`, `user_id`, `total_amount`, `pay
 (76, 'ORDER-1746090936-76', 2, 100.00, 'khalti', 'completed', 'pending', '2025-05-01 09:15:35', 'h6njgPpiKJBetcfdnJDQfF'),
 (77, NULL, 2, 100.00, 'cash', 'pending', 'pending', '2025-05-02 13:31:45', NULL),
 (78, 'ORDER-1746193120-78', 2, 100.00, 'khalti', 'completed', 'pending', '2025-05-02 13:32:08', 'FayqQYeEZydBuLzCgrRGLh'),
-(79, 'ORDER-1746194295-79', 2, 100.00, 'khalti', 'pending', 'pending', '2025-05-02 13:50:32', NULL);
+(79, 'ORDER-1746194295-79', 2, 100.00, 'khalti', 'pending', 'pending', '2025-05-02 13:50:32', NULL),
+(80, NULL, 2, 100.00, 'cash', 'pending', 'pending', '2025-05-03 02:41:21', NULL),
+(81, NULL, 3, 100.00, 'cash', 'pending', 'pending', '2025-05-03 10:52:05', NULL),
+(82, NULL, 2, 100.00, 'cash', 'pending', 'pending', '2025-05-04 12:18:27', NULL),
+(83, NULL, 2, 100.00, 'cash', 'pending', 'pending', '2025-05-05 04:57:23', NULL),
+(84, NULL, 2, 300.00, 'cash', 'pending', 'pending', '2025-05-05 08:06:41', NULL),
+(85, NULL, 2, 100.00, 'cash', 'completed', 'completed', '2025-05-05 08:08:10', NULL);
 
 -- --------------------------------------------------------
 
@@ -204,7 +215,13 @@ INSERT INTO `order_items` (`id`, `order_id`, `book_id`, `quantity`, `price`) VAL
 (77, 76, 15, 1, 100.00),
 (78, 77, 15, 1, 100.00),
 (79, 78, 15, 1, 100.00),
-(80, 79, 15, 1, 100.00);
+(80, 79, 15, 1, 100.00),
+(81, 80, 19, 1, 100.00),
+(82, 81, 21, 1, 100.00),
+(83, 82, 21, 1, 100.00),
+(84, 83, 20, 1, 100.00),
+(85, 84, 20, 3, 100.00),
+(86, 85, 22, 1, 100.00);
 
 -- --------------------------------------------------------
 
@@ -256,7 +273,8 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `address`, `is_admin`, `created_at`) VALUES
 (1, 'admin', 'admin@booktrading.com', '9800000000', 'admin123', NULL, 1, '2025-04-09 08:27:38'),
 (2, 'Nila Neupane', 'neupanesaphalta@gmail.com', '9848591283', 'nilaneupane123@', 'Kathmandu', 0, '2025-04-09 08:48:17'),
-(3, 'Krishna Maya', 'krishnamaya@gmail.com', '9848591283', 'krishnamaya123', 'Kathmandu', 0, '2025-04-10 02:00:01');
+(3, 'Krishna Maya', 'krishnamaya@gmail.com', '9848591283', 'krishnamaya123', 'Kathmandu', 0, '2025-04-10 02:00:01'),
+(4, 'Sita', 'sita@gmail.com', '9876543210', 'sita123', 'Chakrapath Kathmandu Narayan Gopal Chowk', 0, '2025-05-04 08:15:09');
 
 --
 -- Indexes for dumped tables
@@ -307,19 +325,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `books`
 --
 ALTER TABLE `books`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT for table `ratings`
@@ -331,7 +349,7 @@ ALTER TABLE `ratings`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables
