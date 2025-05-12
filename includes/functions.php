@@ -52,19 +52,64 @@ function isValidPhone($phone) {
 }
 
 /**
- * Function to get book by ID
- * 
- * @param int $bookId The ID of the book.
- * @return array|false Book data or false if not found.
+ * Get all available books (status must be 'available')
  */
-function getBookById($bookId) {
+function getAvailableBooks() {
     global $conn;
     
-    // Include join with users table to get user info for admin books
-    $query = "SELECT books.*, users.name as added_by_name, users.is_admin as added_by_is_admin 
-              FROM books 
-              LEFT JOIN users ON books.added_by = users.id 
-              WHERE books.id = '$bookId'";
+    $query = "SELECT b.*, u.name as added_by_name 
+              FROM books b 
+              LEFT JOIN users u ON b.added_by = u.id 
+              WHERE b.status = 'available'
+              ORDER BY b.created_at DESC";
+    
+    $result = mysqli_query($conn, $query);
+    $books = [];
+    
+    if ($result && mysqli_num_rows($result) > 0) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $books[] = $row;
+        }
+    }
+    
+    return $books;
+}
+
+/**
+ * Get all books regardless of status (for admin)
+ */
+function getAllBooks() {
+    global $conn;
+    
+    $query = "SELECT b.*, u.name as added_by_name 
+              FROM books b 
+              LEFT JOIN users u ON b.added_by = u.id 
+              ORDER BY b.created_at DESC";
+    
+    $result = mysqli_query($conn, $query);
+    $books = [];
+    
+    if ($result && mysqli_num_rows($result) > 0) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $books[] = $row;
+        }
+    }
+    
+    return $books;
+}
+
+/**
+ * Get book by ID
+ */
+function getBookById($id) {
+    global $conn;
+    
+    $id = (int)$id; // Ensure it's an integer
+    
+    $query = "SELECT b.*, u.name as added_by_name 
+              FROM books b 
+              LEFT JOIN users u ON b.added_by = u.id 
+              WHERE b.id = $id";
     
     $result = mysqli_query($conn, $query);
     
@@ -72,7 +117,7 @@ function getBookById($bookId) {
         return mysqli_fetch_assoc($result);
     }
     
-    return false;
+    return null;
 }
 
 /**
@@ -374,40 +419,6 @@ function getAllUsers() {
     return $users;
 }
 
-// Function to get all books
-function getAllBooks() {
-    global $conn;
-    $query = "SELECT books.*, users.name as added_by_name FROM books LEFT JOIN users ON books.added_by = users.id";
-    $result = mysqli_query($conn, $query);
-    $books = [];
-    
-    while ($row = mysqli_fetch_assoc($result)) {
-        $books[] = $row;
-    }
-    
-    return $books;
-}
-
-/**
- * Get available books - includes all admin books and user books with quantity > 0.
- */
-function getAvailableBooks() {
-    global $conn;
-    // Join with users table to get added_by info and is_admin status
-    // Modified query to include admin books regardless of quantity
-    $query = "SELECT books.*, users.name as added_by_name, users.is_admin as added_by_is_admin FROM books 
-              LEFT JOIN users ON books.added_by = users.id 
-              WHERE (books.quantity > 0) OR (users.is_admin = 1 OR books.added_by IS NULL)";
-    $result = mysqli_query($conn, $query);
-    $books = [];
-    
-    while ($row = mysqli_fetch_assoc($result)) {
-        $books[] = $row;
-    }
-    
-    return $books;
-}
-
 /**
  * Update book quantity after confirmed purchase.
  * 
@@ -599,5 +610,60 @@ function hasCompletedPurchase($userId, $bookId) {
     $result = mysqli_query($conn, $query);
     
     return mysqli_num_rows($result) > 0;
+}
+
+/**
+ * Delete a user by ID
+ * 
+ * @param int $userId The ID of the user to delete
+ * @return bool True if successful, false otherwise
+ */
+function deleteUser($userId) {
+    global $conn;
+    
+    // Convert to integer for security
+    $userId = (int)$userId;
+    
+    // Begin transaction to ensure data integrity
+    mysqli_begin_transaction($conn);
+    
+    try {
+        // First, delete any related records
+        // Delete user's orders and order items
+        $orderQuery = "SELECT id FROM orders WHERE user_id = $userId";
+        $orderResult = mysqli_query($conn, $orderQuery);
+        
+        if ($orderResult) {
+            while ($order = mysqli_fetch_assoc($orderResult)) {
+                $orderId = $order['id'];
+                // Delete order items
+                mysqli_query($conn, "DELETE FROM order_items WHERE order_id = $orderId");
+            }
+        }
+        
+        // Delete user's orders
+        mysqli_query($conn, "DELETE FROM orders WHERE user_id = $userId");
+        
+        // Delete user's ratings/reviews
+        mysqli_query($conn, "DELETE FROM ratings WHERE user_id = $userId");
+        
+        // Delete the user
+        $deleteQuery = "DELETE FROM users WHERE id = $userId";
+        $result = mysqli_query($conn, $deleteQuery);
+        
+        if ($result && mysqli_affected_rows($conn) > 0) {
+            // Commit transaction
+            mysqli_commit($conn);
+            return true;
+        } else {
+            // Rollback if user deletion failed
+            mysqli_rollback($conn);
+            return false;
+        }
+    } catch (Exception $e) {
+        // Rollback on any error
+        mysqli_rollback($conn);
+        return false;
+    }
 }
 ?>

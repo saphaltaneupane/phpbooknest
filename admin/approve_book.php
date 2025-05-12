@@ -17,6 +17,7 @@ $book = getBookById($bookId);
 
 // If book not found, redirect to books page
 if (!$book) {
+    $_SESSION['error_message'] = 'Book not found.';
     redirect('books.php');
 }
 
@@ -25,7 +26,7 @@ if ($action === 'approve') {
     // Update book status to available
     $query = "UPDATE books SET status = 'available' WHERE id = $bookId";
     if (mysqli_query($conn, $query)) {
-        $_SESSION['success_message'] = 'Book approved and now available for purchase!';
+        $_SESSION['success_message'] = 'Book "' . htmlspecialchars($book['title']) . '" has been approved and is now available for purchase!';
     } else {
         $_SESSION['error_message'] = 'Error approving book: ' . mysqli_error($conn);
     }
@@ -33,7 +34,7 @@ if ($action === 'approve') {
     // Delete the book
     $query = "DELETE FROM books WHERE id = $bookId";
     if (mysqli_query($conn, $query)) {
-        $_SESSION['success_message'] = 'Book rejected and removed from the system.';
+        $_SESSION['success_message'] = 'Book has been rejected and removed from the system.';
     } else {
         $_SESSION['error_message'] = 'Error rejecting book: ' . mysqli_error($conn);
     }

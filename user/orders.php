@@ -166,6 +166,127 @@ $orders = getUserOrders($userId);
         background: linear-gradient(135deg, var(--gray-medium) 0%, var(--gray-dark) 100%);
     }
     
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .action-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: var(--transition);
+        white-space: nowrap;
+    }
+    
+    .view-button {
+        background-color: var(--info-color);
+        color: white;
+    }
+    
+    .view-button:hover {
+        background-color: #0d8aee;
+    }
+    
+    .invoice-button {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+    
+    .invoice-button:hover {
+        background-color: #ff8a55;
+    }
+    
+    .delete-button {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .delete-button:hover {
+        background-color: #e53935;
+    }
+    
+    /* Delete Confirmation Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background-color: white;
+        border-radius: var(--radius);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        width: 90%;
+        max-width: 450px;
+        padding: 25px;
+        position: relative;
+    }
+    
+    .modal-title {
+        margin-top: 0;
+        color: var(--dark-color);
+        font-size: 1.25rem;
+        margin-bottom: 15px;
+    }
+    
+    .modal-text {
+        margin-bottom: 20px;
+        color: var(--text-secondary);
+    }
+    
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .modal-button {
+        padding: 8px 16px;
+        border-radius: 4px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .modal-cancel {
+        background-color: var(--gray-medium);
+        color: var(--text-primary);
+    }
+    
+    .modal-cancel:hover {
+        background-color: var(--gray-dark);
+        color: white;
+    }
+    
+    .modal-confirm {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    .modal-confirm:hover {
+        background-color: #e53935;
+    }
+    
     /* Responsive Table */
     @media screen and (max-width: 768px) {
         .orders-table {
@@ -206,6 +327,16 @@ $orders = getUserOrders($userId);
         
         .orders-table tbody tr:hover {
             transform: translateY(-2px);
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .action-button {
+            width: 100px;
+            justify-content: center;
         }
     }
     
@@ -258,12 +389,17 @@ $orders = getUserOrders($userId);
                                 </span>
                             </td>
                             <td data-label="Actions">
-                                <a href="<?php echo $relativePath; ?>payment_success.php?order_id=<?php echo $order['id']; ?>&status=success" class="action-button view-button">
-                                    <i class="bi bi-eye"></i> View
-                                </a>
-                                <a href="<?php echo $relativePath; ?>invoice.php?id=<?php echo $order['id']; ?>" class="action-button invoice-button">
-                                    <i class="bi bi-file-earmark-text"></i> Invoice
-                                </a>
+                                <div class="action-buttons">
+                                    <a href="<?php echo $relativePath; ?>payment_success.php?order_id=<?php echo $order['id']; ?>&status=success" class="action-button view-button">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a href="<?php echo $relativePath; ?>invoice.php?id=<?php echo $order['id']; ?>" class="action-button invoice-button">
+                                        <i class="bi bi-file-earmark-text"></i> Invoice
+                                    </a>
+                                    <a href="#" class="action-button delete-button" onclick="openDeleteModal(<?php echo $order['id']; ?>); return false;">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -278,5 +414,40 @@ $orders = getUserOrders($userId);
         </a>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h4 class="modal-title">Delete Order</h4>
+        <p class="modal-text">Are you sure you want to delete this order? This action cannot be undone.</p>
+        <div class="modal-buttons">
+            <button class="modal-button modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+            <form id="deleteForm" method="POST" action="<?php echo $relativePath; ?>delete_order.php" style="display:inline;">
+                <input type="hidden" id="deleteOrderId" name="order_id" value="">
+                <button type="submit" class="modal-button modal-confirm">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Functions for handling the delete modal
+    function openDeleteModal(orderId) {
+        document.getElementById('deleteOrderId').value = orderId;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+    }
+    
+    // Close the modal if user clicks outside the modal content
+    window.onclick = function(event) {
+        var modal = document.getElementById('deleteModal');
+        if (event.target == modal) {
+            closeDeleteModal();
+        }
+    }
+</script>
 
 <?php require_once $relativePath . 'includes/footer.php'; ?>

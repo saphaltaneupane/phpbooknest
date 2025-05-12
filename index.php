@@ -5,8 +5,8 @@ if (isLoggedIn() && isAdmin()) {
     redirect('admin/dashboard.php'); // Redirect admin to the admin dashboard
 }
 
-// Get available books
-$books = getAvailableBooks();
+// Get available books (ONLY books with status = 'available')
+$books = getAvailableBooks('available');
 
 // Get content-based recommendations if user is logged in
 if (isLoggedIn()) {

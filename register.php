@@ -27,12 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validate input
     if (empty($name)) {
         $errors['name'] = 'Name is required';
+    } elseif (strpos($name, ' ') === false) {
+        $errors['name'] = 'Please enter your full name (first and last name)';
     }
     
     if (empty($email)) {
         $errors['email'] = 'Email is required';
     } elseif (!isValidEmail($email)) {
         $errors['email'] = 'Invalid email format';
+    } elseif (!preg_match('/.*@gmail\.com$/', $email)) {
+        $errors['email'] = 'Email must end with @gmail.com';
     } else {
         // Check if email already exists
         $query = "SELECT * FROM users WHERE email = '$email'";
@@ -52,6 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['password'] = 'Password is required';
     } elseif (strlen($password) < 6) {
         $errors['password'] = 'Password must be at least 6 characters';
+    } elseif (!preg_match('/[0-9]/', $password)) {
+        $errors['password'] = 'Password must contain at least one number';
     }
     
     if ($password !== $confirm_password) {
@@ -367,7 +373,7 @@ require_once 'includes/header.php';
                     <div class="form-column half">
                         <label for="name" class="form-label">Full Name</label>
                         <input type="text" class="form-control <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" 
-                               id="name" name="name" value="<?php echo $name; ?>" required>
+                               id="name" name="name" value="<?php echo $name; ?>" placeholder="First and Last Name" required>
                         <?php if (isset($errors['name'])): ?>
                             <span class="error-feedback"><?php echo $errors['name']; ?></span>
                         <?php endif; ?>
@@ -376,7 +382,7 @@ require_once 'includes/header.php';
                     <div class="form-column half">
                         <label for="email" class="form-label">Email Address</label>
                         <input type="email" class="form-control <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>" 
-                               id="email" name="email" value="<?php echo $email; ?>" required>
+                               id="email" name="email" value="<?php echo $email; ?>" placeholder="youremail@gmail.com" required>
                         <?php if (isset($errors['email'])): ?>
                             <span class="error-feedback"><?php echo $errors['email']; ?></span>
                         <?php endif; ?>
@@ -397,7 +403,7 @@ require_once 'includes/header.php';
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>" 
                                id="password" name="password" required>
-                        <span class="form-text">Password must be at least 6 characters long.</span>
+                        <span class="form-text">Password must be at least 6 characters long and include at least one number.</span>
                         <?php if (isset($errors['password'])): ?>
                             <span class="error-feedback"><?php echo $errors['password']; ?></span>
                         <?php endif; ?>

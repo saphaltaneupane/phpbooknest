@@ -12,8 +12,10 @@ if (!isLoggedIn() || !isAdmin()) {
 $books = getAllBooks();
 
 // Update book status to 'available' if quantity > 0 but status is not 'available'
+// Modified: Only update book status for admin-added books (is_old = 0)
 foreach ($books as &$book) {
-    if ($book['quantity'] > 0 && $book['status'] !== 'available') {
+    // Only auto-update status for admin-added books (not user-submitted old books)
+    if ($book['quantity'] > 0 && $book['status'] !== 'available' && $book['is_old'] == 0) {
         $updateQuery = "UPDATE books SET status = 'available' WHERE id = " . $book['id'];
         mysqli_query($conn, $updateQuery);
         $book['status'] = 'available'; // Update local copy for display
@@ -194,6 +196,24 @@ foreach ($books as &$book) {
     <div class="main-content">
         <h2>Manage Books</h2>
         
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="alert" style="background-color: #d4edda; border-color: #c3e6cb; color: #155724;">
+                <?php 
+                    echo $_SESSION['success_message']; 
+                    unset($_SESSION['success_message']);
+                ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="alert" style="background-color: #f8d7da; border-color: #f5c6cb; color: #721c24;">
+                <?php 
+                    echo $_SESSION['error_message']; 
+                    unset($_SESSION['error_message']);
+                ?>
+            </div>
+        <?php endif; ?>
+        
         <div>
             <a href="add_book.php" class="btn btn-primary">Add New Book</a>
         </div>
@@ -239,6 +259,9 @@ foreach ($books as &$book) {
                                         <a href="approve_book.php?id=<?php echo $book['id']; ?>&action=approve" 
                                            class="btn btn-success btn-sm" 
                                            onclick="return confirm('Are you sure you want to approve this book?')">Approve</a>
+                                        <a href="approve_book.php?id=<?php echo $book['id']; ?>&action=reject" 
+                                           class="btn btn-danger btn-sm" 
+                                           onclick="return confirm('Are you sure you want to reject this book?')">Reject</a>
                                     <?php endif; ?>
                                     
                                     <a href="delete_book.php?id=<?php echo $book['id']; ?>" 
