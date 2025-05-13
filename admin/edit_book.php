@@ -34,6 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $quantity = 0;
     }
     
+    // FIXED: Auto-update status to 'available' if quantity was increased from 0
+    if ($book['quantity'] == 0 && $quantity > 0) {
+        $status = 'available';  // Automatically set to available when restocking
+    }
+    
     // Validate input
     if (empty($title)) {
         $errors['title'] = 'Title is required';
@@ -324,7 +329,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="card-body">
                 <?php if ($success): ?>
-                    <div class="alert alert-success">Book updated successfully!</div>
+                    <div class="alert alert-success">
+                        Book updated successfully!
+                        <?php if ($book['quantity'] > 0 && $book['status'] === 'available'): ?>
+                            The book is now available on the homepage.
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
                 
                 <?php if (isset($errors['general'])): ?>
@@ -369,8 +379,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="sold" <?php echo $book['status'] === 'sold' ? 'selected' : ''; ?>>Sold</option>
                     </select>
                     <small class="text-muted">
-                        Note: Books with quantity > 0 will appear on the homepage regardless of status.
-                        Setting quantity to 0 will automatically mark the book as sold.
+                        Note: When restocking a sold-out book (increasing quantity from 0),
+                        the status will automatically be changed to "Available".
                     </small>
                 </div>
                 

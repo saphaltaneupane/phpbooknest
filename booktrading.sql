@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 05, 2025 at 10:13 AM
+-- Generation Time: May 13, 2025 at 03:56 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -46,16 +46,19 @@ CREATE TABLE `books` (
 --
 
 INSERT INTO `books` (`id`, `title`, `author`, `description`, `price`, `image`, `status`, `quantity`, `added_by`, `is_old`, `created_at`) VALUES
-(13, 'User le rakheko', 'Saphalta', 'hii', 100.00, 'default-book.jpg', 'sold', 0, 3, 1, '2025-04-19 03:39:05'),
-(14, 'admin le rakheko', 'sss', 'sss', 100.00, 'default-book.jpg', 'available', 1, NULL, 0, '2025-04-19 03:40:28'),
-(15, 'admin', 'wwwww', 'www', 100.00, 'default-book.jpg', 'available', 6, NULL, 0, '2025-04-19 04:30:56'),
-(16, 'admin 2', '2222', '222', 100.00, 'default-book.jpg', 'sold', 0, NULL, 0, '2025-04-19 05:13:28'),
-(17, 'admin kept', 'sss', 'sssssss', 100.00, 'default-book.jpg', 'sold', 0, NULL, 0, '2025-04-20 11:06:40'),
-(18, 'a Horror', 'J.K rowling', 'sss', 100.00, 'default-book.jpg', 'available', 1, NULL, 0, '2025-05-03 02:35:47'),
-(19, 'a bhoot', 'J.K rowling', 'sss', 100.00, 'default-book.jpg', 'sold', 0, NULL, 0, '2025-05-03 02:36:10'),
-(20, 'a horror 2', 'J.K rowling', 'ss', 100.00, 'default-book.jpg', 'available', 6, NULL, 0, '2025-05-03 02:40:35'),
-(21, 'a ss', 'saphalta', '', 100.00, 'default-book.jpg', 'available', 5, NULL, 0, '2025-05-03 10:50:42'),
-(22, 'a bbb', 'saphalta', 'sss', 100.00, 'default-book.jpg', 'available', 10, NULL, 0, '2025-05-03 10:50:59');
+(24, 'Harry Potter and the Sorcerer’s Stone', 'J.K ROWLING', 'Harry Potter and the Sorcerer’s Stone is a spellbinding adventure that whisks readers into a hidden world of magic, mystery, and friendship. From discovering his true identity to facing dark forces at Hogwarts, Harry’s journey will enchant and captivate you from the very first page.', 900.00, '1747050269_Harry Potter And SORCERERS STONE By J.K ROWLING 1.jpg', 'available', 3, NULL, 0, '2025-05-12 11:44:29'),
+(25, 'Harry Potter and the Chamber of Secrets part 2', 'J.K ROWLING', 'Harry Potter and the Chamber of Secrets plunges readers into a thrilling mystery as a dark force stalks the halls of Hogwarts. With danger lurking behind every corner and ancient secrets waiting to be uncovered, Harry must uncover the truth before the school is doomed.', 1000.00, '1747050425_2. Harry Potter and the Chamber of Secrets.jpg', 'available', 3, NULL, 0, '2025-05-12 11:47:05'),
+(26, 'Harry Potter and the Prisoner of Azkaban Part 3', 'J.K ROWLING', 'Harry Potter and the Prisoner of Azkaban delivers a gripping tale of suspense as a dangerous fugitive escapes from Azkaban, seemingly in pursuit of Harry. With dark secrets, time-turning twists, and shocking revelations, this third installment takes the magic—and the stakes—to a whole new level.', 1000.00, '1747050743_3. Harry Potter and the Prisoner of Azkaban.jpg', 'available', 3, NULL, 0, '2025-05-12 11:48:13'),
+(27, 'Harry Potter and the Goblet of Fire Part 4', 'J.K ROWLING', 'Harry Potter and the Goblet of Fire ignites with high-stakes magic as Harry is unexpectedly entered into the deadly Triwizard Tournament. Amid thrilling challenges and rising darkness, he faces the return of Lord Voldemort in a shocking twist that changes everything.', 900.00, '1747050545_4. Harry Potter and the Goblet of Fire.jpg', 'available', 2, NULL, 0, '2025-05-12 11:49:05'),
+(28, 'Harry Potter and the Order of the Phoenix Part 5', 'J.K ROWLING', 'Harry Potter and the Order of the Phoenix dives into a darker, more intense chapter as Harry battles disbelief, government interference, and haunting visions. With the rise of Voldemort denied by the Ministry, Harry and his friends form Dumbledore’s Army to fight back—and uncover powerful truths.', 900.00, '1747050604_5. Harry Potter and the Order of the Phoenix.jpg', 'available', 3, NULL, 0, '2025-05-12 11:50:04'),
+(29, 'Physics', 'Dharm Bahadur Rokaya', 'It  is a comprehensive guide designed to support students in understanding fundamental and advanced physics concepts. It features clear explanations, solved numerical problems, and exam-focused content tailored to the Nepali academic curriculum.', 200.00, '1747051595_Physics Dharm Bahadur Rokaya.jpg', 'available', 1, 6, 1, '2025-05-12 12:06:35'),
+(30, 'Old Book Question', 'Asmita Publication', 'Help for student', 200.00, '1747052177_OLD IS GOLD.jpg', 'available', 1, 3, 1, '2025-05-12 12:13:11'),
+(33, 'ssss', 'sss', 'ssss', 100.00, '1747098997_Screenshot 2025-05-04 190902.png', 'sold', 0, 2, 1, '2025-05-13 01:16:37'),
+(34, 'The Plague Dogs', 'Richard Adams', 'The Plague Dogs by Richard Adams is a powerful and emotional novel about two dogs, Rowf and Snitter, who escape from a cruel animal testing lab in England. As they struggle to survive in the wild, rumors spread that they carry the plague, turning them into hunted outcasts. Through their journey, the story explores themes of freedom, loyalty, and the ethics of animal experimentation.', 900.00, '1747099475_The Plague Dogs .jpg', 'available', 3, NULL, 0, '2025-05-13 01:24:35'),
+(35, 'Shardik', 'Richard Adams', 'Shardik by Richard Adams is a dark, epic fantasy about a giant bear believed to be a god, whose appearance changes the fate of an entire empire.', 900.00, '1747099561_Shardik.jpg', 'available', 3, NULL, 0, '2025-05-13 01:26:01'),
+(36, 'WaterShip Down', 'Richard Adams', 'Watership Down by Richard Adams is a classic adventure about a group of rabbits who flee their warren to find a new home, facing danger, leadership struggles, and survival along the way. It’s a moving tale of courage, freedom, and hope.', 800.00, '1747099691_WaterShip Down.jpg', 'available', 2, NULL, 0, '2025-05-13 01:28:11'),
+(37, 'This Cursed House', 'Del Sandeen', 'A haunted inheritance, deadly secrets, and a house that won’t let go—This Cursed House is a spine-tingling gothic thriller you won’t forget.', 900.00, '1747099796_This Cursed House.jpg', 'available', 3, NULL, 0, '2025-05-13 01:29:56'),
+(38, 'Intercepts', 'T.J. Payne', 'A mind-bending horror thriller about secret experiments, twisted science, and the terrifying cost of control—Intercepts will haunt you long after the final page', 900.00, '1747100435_Intercepts.jpg', 'available', 3, NULL, 0, '2025-05-13 01:40:35');
 
 -- --------------------------------------------------------
 
@@ -159,7 +162,14 @@ INSERT INTO `orders` (`id`, `purchase_order_id`, `user_id`, `total_amount`, `pay
 (82, NULL, 2, 100.00, 'cash', 'pending', 'pending', '2025-05-04 12:18:27', NULL),
 (83, NULL, 2, 100.00, 'cash', 'pending', 'pending', '2025-05-05 04:57:23', NULL),
 (84, NULL, 2, 300.00, 'cash', 'pending', 'pending', '2025-05-05 08:06:41', NULL),
-(85, NULL, 2, 100.00, 'cash', 'completed', 'completed', '2025-05-05 08:08:10', NULL);
+(85, NULL, 2, 100.00, 'cash', 'completed', 'completed', '2025-05-05 08:08:10', NULL),
+(86, NULL, 6, 2700.00, 'cash', 'completed', 'completed', '2025-05-12 12:18:25', NULL),
+(87, NULL, 6, 900.00, 'cash', 'completed', 'completed', '2025-05-12 12:21:38', NULL),
+(88, NULL, 2, 2700.00, 'cash', 'completed', 'completed', '2025-05-12 12:25:25', NULL),
+(89, NULL, 6, 3000.00, 'cash', 'completed', 'completed', '2025-05-12 12:53:48', NULL),
+(90, NULL, 2, 3000.00, 'cash', 'completed', 'completed', '2025-05-12 13:05:25', NULL),
+(91, NULL, 6, 100.00, 'cash', 'completed', 'completed', '2025-05-13 01:17:52', NULL),
+(92, NULL, 3, 800.00, 'cash', 'completed', 'completed', '2025-05-13 01:42:57', NULL);
 
 -- --------------------------------------------------------
 
@@ -180,48 +190,13 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`id`, `order_id`, `book_id`, `quantity`, `price`) VALUES
-(45, 45, 14, 1, 100.00),
-(46, 46, 14, 1, 100.00),
-(47, 47, 14, 1, 100.00),
-(48, 48, 14, 1, 100.00),
-(49, 49, 14, 1, 100.00),
-(50, 50, 14, 1, 100.00),
-(51, 51, 14, 1, 100.00),
-(52, 52, 15, 1, 100.00),
-(53, 53, 16, 1, 100.00),
-(54, 54, 14, 1, 100.00),
-(55, 55, 17, 1, 100.00),
-(56, 56, 15, 1, 100.00),
-(57, 57, 15, 1, 100.00),
-(58, 58, 14, 3, 100.00),
-(59, 59, 14, 1, 100.00),
-(60, 60, 14, 1, 100.00),
-(61, 61, 15, 1, 100.00),
-(62, 62, 15, 1, 100.00),
-(63, 62, 14, 1, 100.00),
-(64, 63, 14, 2, 100.00),
-(65, 64, 15, 1, 100.00),
-(66, 65, 15, 1, 100.00),
-(67, 66, 13, 1, 100.00),
-(68, 67, 14, 1, 100.00),
-(69, 68, 15, 2, 100.00),
-(70, 69, 15, 3, 100.00),
-(71, 70, 15, 2, 100.00),
-(72, 71, 15, 1, 100.00),
-(73, 72, 15, 1, 100.00),
-(74, 73, 15, 1, 100.00),
-(75, 74, 15, 1, 100.00),
-(76, 75, 15, 1, 100.00),
-(77, 76, 15, 1, 100.00),
-(78, 77, 15, 1, 100.00),
-(79, 78, 15, 1, 100.00),
-(80, 79, 15, 1, 100.00),
-(81, 80, 19, 1, 100.00),
-(82, 81, 21, 1, 100.00),
-(83, 82, 21, 1, 100.00),
-(84, 83, 20, 1, 100.00),
-(85, 84, 20, 3, 100.00),
-(86, 85, 22, 1, 100.00);
+(87, 86, 28, 3, 900.00),
+(88, 87, 27, 1, 900.00),
+(89, 88, 28, 3, 900.00),
+(90, 89, 25, 3, 1000.00),
+(91, 90, 25, 3, 1000.00),
+(92, 91, 33, 1, 100.00),
+(93, 92, 36, 1, 800.00);
 
 -- --------------------------------------------------------
 
@@ -243,11 +218,7 @@ CREATE TABLE `ratings` (
 --
 
 INSERT INTO `ratings` (`id`, `user_id`, `book_id`, `rating`, `review`, `created_at`) VALUES
-(16, 3, 14, 5, 'ssss', '2025-04-19 04:45:26'),
-(17, 2, 14, 3, 'okay', '2025-04-19 05:07:14'),
-(18, 2, 15, 5, 'okay', '2025-04-19 05:18:08'),
-(19, 2, 16, 5, 'okayy', '2025-04-19 05:22:29'),
-(20, 3, 17, 3, 'goood', '2025-04-20 11:17:21');
+(21, 6, 27, 5, 'Must Buy', '2025-05-12 12:22:57');
 
 -- --------------------------------------------------------
 
@@ -272,9 +243,10 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `address`, `is_admin`, `created_at`) VALUES
 (1, 'admin', 'admin@booktrading.com', '9800000000', 'admin123', NULL, 1, '2025-04-09 08:27:38'),
-(2, 'Nila Neupane', 'neupanesaphalta@gmail.com', '9848591283', 'nilaneupane123@', 'Kathmandu', 0, '2025-04-09 08:48:17'),
+(2, 'Nila Neupane', 'neupanesaphalta@gmail.com', '9848591283', 'nilaneupane123', 'Chakrapath,Kathmandu', 0, '2025-04-09 08:48:17'),
 (3, 'Krishna Maya', 'krishnamaya@gmail.com', '9848591283', 'krishnamaya123', 'Kathmandu', 0, '2025-04-10 02:00:01'),
-(4, 'Sita', 'sita@gmail.com', '9876543210', 'sita123', 'Chakrapath Kathmandu Narayan Gopal Chowk', 0, '2025-05-04 08:15:09');
+(4, 'Sita', 'sita@gmail.com', '9876543210', 'sita123', 'Chakrapath Kathmandu Narayan Gopal Chowk', 0, '2025-05-04 08:15:09'),
+(6, 'saphalta neupane', 'saphalta@gmail.com', '9848591283', 'saphalta123', 'Chakrapath, Kathmandu', 0, '2025-05-12 02:13:27');
 
 --
 -- Indexes for dumped tables
@@ -325,31 +297,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `books`
 --
 ALTER TABLE `books`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
 
 --
 -- AUTO_INCREMENT for table `ratings`
 --
 ALTER TABLE `ratings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables

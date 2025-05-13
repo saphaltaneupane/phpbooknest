@@ -181,13 +181,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         border-radius: var(--radius-sm);
         font-size: 16px;
         transition: var(--transition);
-        background-color: white;
+        background-color: white !important;
+        color: black !important;
     }
     
     .form-control:focus {
         outline: none;
         border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+        background-color: white !important;
+        color: black !important;
     }
     
     .form-control-invalid {
@@ -201,6 +204,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     textarea.form-control {
         min-height: 120px;
         resize: vertical;
+        background-color: white !important;
+        color: black !important;
     }
     
     .help-text {

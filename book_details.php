@@ -445,15 +445,15 @@ $avgRating = getBookRating($bookId);
     /* For dark mode compatibility */
     @media (prefers-color-scheme: dark) {
         .book-title {
-            color: #f8f9fa;
+            color:black;
         }
         
         .book-author {
-            color: #adb5bd;
+            color:black;
         }
         
         .book-description {
-            color: #e9ecef;
+            color:black;
         }
         
         .review-form-container {
