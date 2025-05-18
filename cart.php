@@ -357,8 +357,7 @@ $formattedTotal = number_format($total, 2);
             border-color: #495057;
         }
         
-        .cart-product-a
-uthor {
+        .cart-product-author {
             color: #adb5bd;
         }
         
@@ -461,18 +460,9 @@ uthor {
                 </a>
             </div>
             
-            <?php if (isLoggedIn()): ?>
-                <a href="checkout.php" class="cart-checkout-btn">Proceed to Checkout</a>
-            <?php else: ?>
-                <div class="login-instruction">
-                    <p>Please log in or register to complete your purchase.</p>
-                    <p>Your cart items will be saved for you.</p>
-                    <div class="btn-group">
-                        <a href="login.php?redirect=checkout" class="btn login-btn">Login</a>
-                        <a href="register.php?redirect=checkout" class="btn register-btn">Register</a>
-                    </div>
-                </div>
-            <?php endif; ?>
+            <!-- Always show the checkout button regardless of login status -->
+            <a href="<?php echo isLoggedIn() ? 'checkout.php' : 'login.php?redirect=checkout'; ?>" class="cart-checkout-btn">Proceed to Checkout</a>
+            
         </form>
     <?php endif; ?>
 </div>
