@@ -82,6 +82,9 @@ if (!isLoggedIn() || !isAdmin()) {
                 <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'add_book.php' ? 'active' : ''; ?>" href="add_book.php">Add New Book</a>
             </li>
             <li>
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'categories.php' ? 'active' : ''; ?>" href="categories.php">Manage Categories</a>
+            </li>
+            <li>
                 <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'orders.php' ? 'active' : ''; ?>" href="orders.php">Manage Orders</a>
             </li>
         </ul>
@@ -90,7 +93,7 @@ if (!isLoggedIn() || !isAdmin()) {
 
 <div class="container">
     <h2>Welcome to the Admin Dashboard</h2>
-    <p>Use the navigation bar above to manage users, books, and orders.</p>
+    <p>Use the navigation bar above to manage users, books, categories, and orders.</p>
 </div>
 
 <?php require_once $relativePath . 'includes/footer.php'; ?>

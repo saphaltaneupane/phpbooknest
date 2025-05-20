@@ -83,6 +83,17 @@ while ($row = mysqli_fetch_assoc($ratingsResult)) {
 
 // Calculate average rating
 $avgRating = getBookRating($bookId);
+
+// Fetch category name for the book
+$categoryName = '';
+if (!empty($book['category_id'])) {
+    $catId = (int)$book['category_id'];
+    $catQuery = "SELECT name FROM categories WHERE id = $catId LIMIT 1";
+    $catResult = mysqli_query($conn, $catQuery);
+    if ($catRow = mysqli_fetch_assoc($catResult)) {
+        $categoryName = $catRow['name'];
+    }
+}
 ?>
 
 <style>
@@ -670,6 +681,22 @@ $avgRating = getBookRating($bookId);
             <button class="cart-btn" disabled>Out of Stock</button>
         <?php endif; ?>
     </div>
+</div>
+
+<div class="book-details">
+    <p><strong>Author:</strong> <?php echo $book['author']; ?></p>
+    <p><strong>Category:</strong>
+        <?php if (!empty($categoryName)): ?>
+            <a href="category.php?id=<?php echo $book['category_id']; ?>"><?php echo htmlspecialchars($categoryName); ?></a>
+        <?php else: ?>
+            <span>Unknown</span>
+        <?php endif; ?>
+    </p>
+    <p><strong>Price:</strong> Rs. <?php echo $book['price']; ?></p>
+    <p><strong>Status:</strong> <?php echo ucfirst($book['status']); ?></p>
+    <?php if (!empty($book['is_old'])): ?>
+        <p><strong>Condition:</strong> <span class="badge bg-secondary">Used</span></p>
+    <?php endif; ?>
 </div>
 
 <!-- Reviews Section -->
