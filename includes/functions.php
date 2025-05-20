@@ -177,52 +177,68 @@ function getTopRatedBooks($limit = 5) {
 }
 
 /**
- * Get books that a user has purchased or rated highly.
- * @param int $userId The user ID
- * @return array Array of preferred books
+ * Calculate similarity score between two books based on their attributes.
+ * Enhanced version with stronger author, category, and price matching.
+ * 
+ * @param array $book1 First book data
+ * @param array $book2 Second book data
+ * @return float Similarity score
  */
-function getUserPreferredBooks($userId) {
-    global $conn;
-    $userBooks = [];
+function calculateBookSimilarity($book1, $book2) {
+    $score = 0;
     
-    // Get books user has purchased with COMPLETED orders and payment status
-    $query = "SELECT DISTINCT b.* FROM books b
-              JOIN order_items oi ON b.id = oi.book_id
-              JOIN orders o ON oi.order_id = o.id
-              WHERE o.user_id = $userId
-              AND o.status IN ('completed', 'processing', 'shipped')
-              AND o.payment_status = 'completed'";
-    
-    $result = mysqli_query($conn, $query);
-    
-    if ($result) {
-        while ($row = mysqli_fetch_assoc($result)) {
-            $userBooks[$row['id']] = $row;
-        }
-    } else {
-        error_log("Error getting purchased books: " . mysqli_error($conn));
+    // Author similarity (highest weight - 5 points, increased from 4)
+    if (strtolower(trim($book1['author'])) === strtolower(trim($book2['author']))) {
+        $score += 5; // Increased weight for author match
     }
     
-    // Get books user has rated 4 or higher (genuinely preferred)
-    $query = "SELECT DISTINCT b.* FROM books b
-              JOIN ratings r ON b.id = r.book_id
-              WHERE r.user_id = $userId
-              AND r.rating >= 4";
-    
-    $result = mysqli_query($conn, $query);
-    
-    if ($result) {
-        while ($row = mysqli_fetch_assoc($result)) {
-            $userBooks[$row['id']] = $row;
-        }
-    } else {
-        error_log("Error getting rated books: " . mysqli_error($conn));
+    // Category/Genre similarity (3 points for exact category match)
+    if (isset($book1['category_id']) && isset($book2['category_id']) && 
+        $book1['category_id'] == $book2['category_id']) {
+        $score += 3;
     }
     
-    // Log for debugging
-    error_log("Found " . count($userBooks) . " preferred books for user $userId");
+    // Title keyword similarity
+    $title1Keywords = extractKeywords($book1['title']);
+    $title2Keywords = extractKeywords($book2['title']);
+    $commonTitleWords = array_intersect($title1Keywords, $title2Keywords);
+    $score += count($commonTitleWords) * 0.8; // 0.8 points per common word
     
-    return array_values($userBooks);
+    // Description keyword similarity
+    if (!empty($book1['description']) && !empty($book2['description'])) {
+        $desc1Keywords = extractKeywords($book1['description']);
+        $desc2Keywords = extractKeywords($book2['description']);
+        $commonDescWords = array_intersect($desc1Keywords, $desc2Keywords);
+        $score += count($commonDescWords) * 0.3; // 0.3 points per common word
+    }
+    
+    // Book type similarity (new/used)
+    if (isset($book1['is_old']) && isset($book2['is_old']) && $book1['is_old'] == $book2['is_old']) {
+        $score += 1;
+    }
+    
+    // Price similarity (improved to consider price ranges better)
+    if (isset($book1['price']) && isset($book2['price']) && 
+        $book1['price'] > 0 && $book2['price'] > 0) {
+        
+        // Basic price ratio (as before)
+        $priceRatio = min($book1['price'], $book2['price']) / max($book1['price'], $book2['price']);
+        
+        // Additional points if books are in similar price ranges
+        $priceDiff = abs($book1['price'] - $book2['price']);
+        $avgPrice = ($book1['price'] + $book2['price']) / 2;
+        $percentDiff = $priceDiff / $avgPrice;
+        
+        if ($percentDiff < 0.1) {  // Less than 10% difference
+            $score += 1.5;  // Very similar prices
+        } else if ($percentDiff < 0.25) {  // Less than 25% difference
+            $score += 1;  // Similar prices
+        }
+        
+        $score += $priceRatio; // Add the base ratio score too
+    }
+    
+    return $score;
 }
 
 /**
@@ -259,50 +275,120 @@ function extractKeywords($string) {
 }
 
 /**
- * Calculate similarity score between two books based on their attributes.
- * @param array $book1 First book data
- * @param array $book2 Second book data
- * @return float Similarity score
+ * Get books that a user has purchased or rated highly,
+ * organized by author and category for better pattern recognition.
+ * 
+ * @param int $userId The user ID
+ * @return array Array of preferred books with metadata
  */
-function calculateBookSimilarity($book1, $book2) {
-    $score = 0;
+function getUserPreferredBooks($userId) {
+    global $conn;
+    $userBooks = [];
+    $preferredAuthors = [];
+    $preferredCategories = [];
+    $priceRanges = [];
     
-    // Author similarity (highest weight - 4 points)
-    if (strtolower(trim($book1['author'])) === strtolower(trim($book2['author']))) {
-        $score += 4;
+    // Get books user has purchased with COMPLETED orders and payment status
+    $query = "SELECT DISTINCT b.* FROM books b
+              JOIN order_items oi ON b.id = oi.book_id
+              JOIN orders o ON oi.order_id = o.id
+              WHERE o.user_id = $userId
+              AND o.status IN ('completed', 'processing', 'shipped')
+              AND o.payment_status = 'completed'";
+    
+    $result = mysqli_query($conn, $query);
+    
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $userBooks[$row['id']] = $row;
+            
+            // Track preferred authors
+            $author = strtolower(trim($row['author']));
+            if (!isset($preferredAuthors[$author])) {
+                $preferredAuthors[$author] = 0;
+            }
+            $preferredAuthors[$author]++;
+            
+            // Track preferred categories
+            $categoryId = $row['category_id'] ?? 0;
+            if ($categoryId > 0) {
+                if (!isset($preferredCategories[$categoryId])) {
+                    $preferredCategories[$categoryId] = 0;
+                }
+                $preferredCategories[$categoryId]++;
+            }
+            
+            // Track price ranges
+            $price = (float)$row['price'];
+            $priceRanges[] = $price;
+        }
+    } else {
+        error_log("Error getting purchased books: " . mysqli_error($conn));
     }
     
-    // Title keyword similarity
-    $title1Keywords = extractKeywords($book1['title']);
-    $title2Keywords = extractKeywords($book2['title']);
-    $commonTitleWords = array_intersect($title1Keywords, $title2Keywords);
-    $score += count($commonTitleWords) * 0.8; // 0.8 points per common word
+    // Get books user has rated 4 or higher (genuinely preferred)
+    $query = "SELECT DISTINCT b.* FROM books b
+              JOIN ratings r ON b.id = r.book_id
+              WHERE r.user_id = $userId
+              AND r.rating >= 4";
     
-    // Description keyword similarity
-    if (!empty($book1['description']) && !empty($book2['description'])) {
-        $desc1Keywords = extractKeywords($book1['description']);
-        $desc2Keywords = extractKeywords($book2['description']);
-        $commonDescWords = array_intersect($desc1Keywords, $desc2Keywords);
-        $score += count($commonDescWords) * 0.3; // 0.3 points per common word
+    $result = mysqli_query($conn, $query);
+    
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $userBooks[$row['id']] = $row;
+            
+            // Also track authors and categories from highly rated books
+            $author = strtolower(trim($row['author']));
+            if (!isset($preferredAuthors[$author])) {
+                $preferredAuthors[$author] = 0;
+            }
+            $preferredAuthors[$author]++;
+            
+            $categoryId = $row['category_id'] ?? 0;
+            if ($categoryId > 0) {
+                if (!isset($preferredCategories[$categoryId])) {
+                    $preferredCategories[$categoryId] = 0;
+                }
+                $preferredCategories[$categoryId]++;
+            }
+            
+            // Track price ranges
+            $price = (float)$row['price'];
+            $priceRanges[] = $price;
+        }
+    } else {
+        error_log("Error getting rated books: " . mysqli_error($conn));
     }
     
-    // Book type similarity (new/used)
-    if (isset($book1['is_old']) && isset($book2['is_old']) && $book1['is_old'] == $book2['is_old']) {
-        $score += 1;
+    // Calculate preferred price range if we have data
+    $minPrice = $maxPrice = $avgPrice = 0;
+    if (!empty($priceRanges)) {
+        $minPrice = min($priceRanges);
+        $maxPrice = max($priceRanges);
+        $avgPrice = array_sum($priceRanges) / count($priceRanges);
     }
     
-    // Price similarity (0-1 points based on how close the prices are)
-    if (isset($book1['price']) && isset($book2['price']) && 
-        $book1['price'] > 0 && $book2['price'] > 0) {
-        $priceRatio = min($book1['price'], $book2['price']) / max($book1['price'], $book2['price']);
-        $score += $priceRatio;
-    }
+    // Log for debugging
+    error_log("Found " . count($userBooks) . " preferred books for user $userId");
     
-    return $score;
+    // Return books with metadata about user preferences
+    return [
+        'books' => array_values($userBooks),
+        'authors' => $preferredAuthors,
+        'categories' => $preferredCategories,
+        'priceRange' => [
+            'min' => $minPrice,
+            'max' => $maxPrice,
+            'avg' => $avgPrice
+        ]
+    ];
 }
 
 /**
  * Function to get content-based book recommendations for a user.
+ * Enhanced to better utilize user preferences from purchase history.
+ * 
  * @param int $userId The ID of the user.
  * @param int $limit The maximum number of recommendations to return.
  * @return array The recommended books.
@@ -310,8 +396,12 @@ function calculateBookSimilarity($book1, $book2) {
 function getContentBasedRecommendations($userId, $limit = 5) {
     global $conn;
     
-    // Get books this user has purchased or rated highly
-    $userPreferredBooks = getUserPreferredBooks($userId);
+    // Get books this user has purchased or rated highly, with preference data
+    $userPreferences = getUserPreferredBooks($userId);
+    $userPreferredBooks = $userPreferences['books'];
+    $preferredAuthors = $userPreferences['authors'];
+    $preferredCategories = $userPreferences['categories'];
+    $priceRange = $userPreferences['priceRange'];
     
     // If no preferred books, return top rated books as fallback
     if (empty($userPreferredBooks)) {
@@ -329,9 +419,11 @@ function getContentBasedRecommendations($userId, $limit = 5) {
     }
     
     $availableBooks = [];
+    $userBookIds = array_column($userPreferredBooks, 'id');
+    
     while ($row = mysqli_fetch_assoc($result)) {
         // Skip books the user already has interacted with
-        if (!in_array($row['id'], array_column($userPreferredBooks, 'id'))) {
+        if (!in_array($row['id'], $userBookIds)) {
             $availableBooks[] = $row;
         }
     }
@@ -348,6 +440,34 @@ function getContentBasedRecommendations($userId, $limit = 5) {
         $totalScore = 0;
         $bestScore = 0;
         
+        // Add bonus points for preferred authors (from purchase history)
+        $bookAuthor = strtolower(trim($book['author']));
+        if (isset($preferredAuthors[$bookAuthor]) && $preferredAuthors[$bookAuthor] > 0) {
+            // More purchases of this author = higher bonus
+            $authorBonus = min(3, $preferredAuthors[$bookAuthor]) * 2;
+            $totalScore += $authorBonus;
+        }
+        
+        // Add bonus points for preferred categories
+        $bookCategory = $book['category_id'] ?? 0;
+        if ($bookCategory > 0 && isset($preferredCategories[$bookCategory]) && $preferredCategories[$bookCategory] > 0) {
+            // More purchases in this category = higher bonus
+            $categoryBonus = min(3, $preferredCategories[$bookCategory]) * 1.5;
+            $totalScore += $categoryBonus;
+        }
+        
+        // Add bonus for books in user's preferred price range
+        if ($priceRange['avg'] > 0) {
+            $bookPrice = (float)$book['price'];
+            $percentDiff = abs($bookPrice - $priceRange['avg']) / $priceRange['avg'];
+            
+            if ($percentDiff < 0.15) {  // Within 15% of average spending
+                $totalScore += 2;
+            } else if ($percentDiff < 0.30) {  // Within 30% of average spending
+                $totalScore += 1;
+            }
+        }
+        
         // Find best matching score against any user preferred book
         foreach ($userPreferredBooks as $userBook) {
             $similarityScore = calculateBookSimilarity($book, $userBook);
@@ -358,8 +478,12 @@ function getContentBasedRecommendations($userId, $limit = 5) {
             }
         }
         
-        // Average score plus best score to balance breadth and depth
-        $finalScore = ($totalScore / count($userPreferredBooks)) + ($bestScore * 0.5);
+        // Calculate final score with weighted components
+        $avgScore = count($userPreferredBooks) > 0 ? 
+                   $totalScore / count($userPreferredBooks) : 0;
+        
+        // Weighted formula: 40% average similarity + 60% best match similarity
+        $finalScore = ($avgScore * 0.4) + ($bestScore * 0.6);
         
         // Store the book with its similarity score
         $book['similarity_score'] = $finalScore;

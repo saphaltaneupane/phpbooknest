@@ -27,6 +27,26 @@ if (isLoggedIn()) {
     // Not logged in, show top rated books with 4+ stars
     $recommendedBooks = getTopRatedBooks(4);
 }
+
+// Get all categories from database
+$categoriesQuery = "SELECT * FROM categories ORDER BY name";
+$categoriesResult = mysqli_query($conn, $categoriesQuery);
+$categories = [];
+if ($categoriesResult && mysqli_num_rows($categoriesResult) > 0) {
+    while ($row = mysqli_fetch_assoc($categoriesResult)) {
+        $categories[] = $row;
+    }
+}
+
+// Group books by their assigned categories
+$booksByCategory = [];
+foreach ($books as $book) {
+    $categoryId = $book['category_id'] ?? 0;
+    if (!isset($booksByCategory[$categoryId])) {
+        $booksByCategory[$categoryId] = [];
+    }
+    $booksByCategory[$categoryId][] = $book;
+}
 ?>
 
 <style>
@@ -302,6 +322,111 @@ if (isLoggedIn()) {
         background-color: #6c757d;
         border-color: #6c757d;
     }
+    
+    /* Category section styles */
+    .category-title {
+        margin-top: 2rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        color: #333;
+        border-left: 4px solid #007bff;
+        padding-left: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .category-badge {
+        background-color: #007bff;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        margin-right: 10px;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 10px;
+        transition: background-color 0.3s, transform 0.2s;
+        font-weight: 500;
+    }
+    
+    .category-badge:hover {
+        background-color: #0056b3;
+        text-decoration: none;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .see-all-link {
+        font-size: 0.9rem;
+        color: #007bff;
+        text-decoration: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+    
+    .see-all-link:hover {
+        background-color: #f0f0f0;
+        text-decoration: none;
+    }
+    
+    .category-container {
+        clear: both;
+    }
+    
+    /* Category navigation */
+    .categories-nav {
+        background-color: #f8f9fa;
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    /* Different colors for different category badges */
+    .category-badge.fiction {
+        background-color: #6a11cb;
+        background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+    }
+    
+    .category-badge.non-fiction {
+        background-color: #0ba360;
+        background-image: linear-gradient(to right, #0ba360 0%, #3cba92 100%);
+    }
+    
+    .category-badge.children {
+        background-color: #ff9a9e;
+        background-image: linear-gradient(to right, #ff9a9e 0%, #fad0c4 100%);
+        color: #333;
+    }
+    
+    .category-badge.educational {
+        background-color: #4facfe;
+        background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .category-badge.comics {
+        background-color: #f857a6;
+        background-image: linear-gradient(to right, #f857a6 0%, #ff5858 100%);
+    }
+    
+    .category-badge.horror {
+        background-color: #232526;
+        background-image: linear-gradient(to right, #232526 0%, #414345 100%);
+    }
+    
+    /* Empty category message */
+    .category-empty {
+        padding: 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        color: #6c757d;
+        font-style: italic;
+    }
 </style>
 
 <div class="jumbotron">
@@ -369,62 +494,91 @@ if (isLoggedIn()) {
     </section>
     <?php endif; ?>
 
-    <!-- All Available Books -->
-    <section>
-        <h2 class="mb-4">Available Books</h2>
-        <div class="row">
-            <?php if (empty($books)): ?>
-                <div class="col-12">
-                    <p>No books available at the moment.</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($books as $book): ?>
-                    <div class="col-md-3 mb-4">
-                        <div class="card book-card h-100">
-                            <img src="assets/images/<?php echo $book['image']; ?>" class="card-img-top book-image" alt="<?php echo $book['title']; ?>">
-                            <div class="card-body">
-                                <h5 class="card-title" title="<?php echo $book['title']; ?>"><?php echo $book['title']; ?></h5>
-                                <p class="card-text book-author" title="by <?php echo $book['author']; ?>">by <?php echo $book['author']; ?></p>
-                                <div class="card-text rating">
-                                    <div class="stars">
-                                    <?php 
-                                    $rating = getBookRating($book['id']);
-                                    for ($i = 1; $i <= 5; $i++) {
-                                        if ($i <= $rating) {
-                                            echo '<i class="bi bi-star-fill"></i>';
-                                        } else if ($i <= $rating + 0.5) {
-                                            echo '<i class="bi bi-star-half"></i>';
-                                        } else {
-                                            echo '<i class="bi bi-star"></i>';
-                                        }
-                                    }
-                                    ?>
-                                    </div>
-                                    <span class="rating-count"><?php echo $rating; ?></span>
-                                </div>
-                                <p class="card-text book-price">Rs. <?php echo $book['price']; ?></p>
-                                <?php if (isset($book['is_old']) && $book['is_old'] == 1): ?>
-                                    <span class="badge bg-secondary used-badge">Used</span>
-                                <?php endif; ?>
-                                <p class="card-text">
-                                    <small class="<?php echo $book['quantity'] > 0 ? 'text-success' : 'text-danger'; ?>">
-                                        <?php if ($book['quantity'] > 0): ?>
-                                            <?php echo $book['quantity']; ?> copies available
-                                        <?php else: ?>
-                                            Out of stock
-                                        <?php endif; ?>
-                                    </small>
-                                </p>
-                                <a href="book_details.php?id=<?php echo $book['id']; ?>" 
-                                   class="btn <?php echo $book['quantity'] > 0 ? 'btn-primary' : 'btn-secondary'; ?>">
-                                    View Details
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
+    <!-- Books by Category -->
+    <section class="mb-5">
+        <h2 class="mb-4">Browse by Category</h2>
+        
+        <!-- Category navigation badges -->
+        <div class="categories-nav">
+            <?php foreach ($categories as $index => $category): 
+                // Generate CSS class based on category name
+                $categoryClass = strtolower(str_replace(' ', '-', str_replace('\'s', '', str_replace('&', 'and', $category['name']))));
+            ?>
+                <a href="#category-<?php echo $category['id']; ?>" class="category-badge <?php echo $categoryClass; ?>">
+                    <?php echo $category['name']; ?>
+                </a>
+            <?php endforeach; ?>
         </div>
+        
+        <!-- Display books by category -->
+        <?php foreach ($categories as $category): ?>
+            <div id="category-<?php echo $category['id']; ?>" class="category-section mb-5">
+                <h3 class="category-title">
+                    <?php echo $category['name']; ?>
+                    <a href="category.php?id=<?php echo $category['id']; ?>" class="see-all-link">See All</a>
+                </h3>
+                
+                <div class="category-container">
+                    <?php if (isset($booksByCategory[$category['id']]) && !empty($booksByCategory[$category['id']])): ?>
+                        <div class="row">
+                            <?php 
+                            // Show up to 4 books per category
+                            $categoryBooks = array_slice($booksByCategory[$category['id']], 0, 4);
+                            foreach ($categoryBooks as $book): 
+                            ?>
+                                <div class="col-md-3 mb-4">
+                                    <div class="card book-card h-100">
+                                        <img src="assets/images/<?php echo $book['image']; ?>" class="card-img-top book-image" alt="<?php echo $book['title']; ?>">
+                                        <div class="card-body">
+                                            <h5 class="card-title" title="<?php echo $book['title']; ?>"><?php echo $book['title']; ?></h5>
+                                            <p class="card-text book-author" title="by <?php echo $book['author']; ?>">by <?php echo $book['author']; ?></p>
+                                            <div class="card-text rating">
+                                                <div class="stars">
+                                                <?php 
+                                                $rating = getBookRating($book['id']);
+                                                for ($i = 1; $i <= 5; $i++) {
+                                                    if ($i <= $rating) {
+                                                        echo '<i class="bi bi-star-fill"></i>';
+                                                    } else if ($i <= $rating + 0.5) {
+                                                        echo '<i class="bi bi-star-half"></i>';
+                                                    } else {
+                                                        echo '<i class="bi bi-star"></i>';
+                                                    }
+                                                }
+                                                ?>
+                                                </div>
+                                                <span class="rating-count"><?php echo $rating; ?></span>
+                                            </div>
+                                            <p class="card-text book-price">Rs. <?php echo $book['price']; ?></p>
+                                            <?php if (isset($book['is_old']) && $book['is_old'] == 1): ?>
+                                                <span class="badge bg-secondary used-badge">Used</span>
+                                            <?php endif; ?>
+                                            <p class="card-text">
+                                                <small class="<?php echo $book['quantity'] > 0 ? 'text-success' : 'text-danger'; ?>">
+                                                    <?php if ($book['quantity'] > 0): ?>
+                                                        <?php echo $book['quantity']; ?> copies available
+                                                    <?php else: ?>
+                                                        Out of stock
+                                                    <?php endif; ?>
+                                                </small>
+                                            </p>
+                                            <a href="book_details.php?id=<?php echo $book['id']; ?>" 
+                                               class="btn <?php echo $book['quantity'] > 0 ? 'btn-primary' : 'btn-secondary'; ?>">
+                                                View Details
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="category-empty">
+                            No books available in this category at the moment.
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endforeach; ?>
     </section>
 </div>
 
@@ -435,7 +589,22 @@ if (isLoggedIn()) {
         const bookTitles = document.querySelectorAll('.card-title');
         const bookAuthors = document.querySelectorAll('.book-author');
         
-        // Add any additional card interactivity here if needed
+        // Smooth scroll for category links
+        document.querySelectorAll('.category-badge').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
     });
 </script>
 

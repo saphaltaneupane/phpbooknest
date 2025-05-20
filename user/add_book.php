@@ -11,6 +11,16 @@ if (!isLoggedIn() || isAdmin()) {
 // Get user ID
 $userId = $_SESSION['user_id'];
 
+// Get all categories for the dropdown
+$categoriesQuery = "SELECT * FROM categories ORDER BY name";
+$categoriesResult = mysqli_query($conn, $categoriesQuery);
+$categories = [];
+if ($categoriesResult && mysqli_num_rows($categoriesResult) > 0) {
+    while ($row = mysqli_fetch_assoc($categoriesResult)) {
+        $categories[] = $row;
+    }
+}
+
 $errors = [];
 $success = false;
 
@@ -20,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $author = sanitize($_POST['author']);
     $description = sanitize($_POST['description']);
     $price = sanitize($_POST['price']);
+    $categoryId = isset($_POST['category_id']) ? (int)$_POST['category_id'] : null; // Get category ID
     
     // Validate input
     if (empty($title)) {
@@ -34,6 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['price'] = 'Price is required';
     } elseif (!is_numeric($price) || $price <= 0) {
         $errors['price'] = 'Price must be a positive number';
+    }
+    
+    // Validate category
+    if (empty($categoryId)) {
+        $errors['category'] = 'Please select a category';
     }
     
     // Handle image upload
@@ -72,13 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // If no errors, add book to database
     if (empty($errors)) {
-        $query = "INSERT INTO books (title, author, description, price, image, added_by, is_old, status) 
-                  VALUES ('$title', '$author', '$description', '$price', '$targetFile', $userId, 1, 'pending')";
+        $query = "INSERT INTO books (title, author, description, price, image, added_by, is_old, status, category_id) 
+                  VALUES ('$title', '$author', '$description', '$price', '$targetFile', $userId, 1, 'pending', $categoryId)";
         
         if (mysqli_query($conn, $query)) {
             $success = true;
             // Reset form data
             $title = $author = $description = $price = '';
+            $categoryId = null;
         } else {
             $errors['general'] = 'Error adding book: ' . mysqli_error($conn);
         }
@@ -277,6 +294,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         cursor: pointer;
     }
     
+    /* Select dropdown styling */
+    select.form-control {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236c63ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 16px;
+        padding-right: 45px;
+    }
+    
     /* Responsive Adjustments */
     @media screen and (max-width: 768px) {
         .form-container {
@@ -330,6 +359,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            id="author" name="author" value="<?php echo isset($author) ? $author : ''; ?>" required>
                     <?php if (isset($errors['author'])): ?>
                         <span class="error-message"><?php echo $errors['author']; ?></span>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category_id" class="form-label">Book Category</label>
+                    <select class="form-control <?php echo isset($errors['category']) ? 'form-control-invalid' : ''; ?>" 
+                            id="category_id" name="category_id" required>
+                        <option value="">-- Select Category --</option>
+                        <?php foreach ($categories as $category): ?>
+                            <option value="<?php echo $category['id']; ?>" <?php echo (isset($categoryId) && $categoryId == $category['id']) ? 'selected' : ''; ?>>
+                                <?php echo $category['name']; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php if (isset($errors['category'])): ?>
+                        <span class="error-message"><?php echo $errors['category']; ?></span>
                     <?php endif; ?>
                 </div>
                 

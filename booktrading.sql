@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 13, 2025 at 03:56 AM
+-- Generation Time: May 20, 2025 at 03:47 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -38,6 +38,7 @@ CREATE TABLE `books` (
   `quantity` int(11) DEFAULT 1,
   `added_by` int(11) DEFAULT NULL,
   `is_old` tinyint(1) DEFAULT 0,
+  `category_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -45,20 +46,45 @@ CREATE TABLE `books` (
 -- Dumping data for table `books`
 --
 
-INSERT INTO `books` (`id`, `title`, `author`, `description`, `price`, `image`, `status`, `quantity`, `added_by`, `is_old`, `created_at`) VALUES
-(24, 'Harry Potter and the Sorcerer’s Stone', 'J.K ROWLING', 'Harry Potter and the Sorcerer’s Stone is a spellbinding adventure that whisks readers into a hidden world of magic, mystery, and friendship. From discovering his true identity to facing dark forces at Hogwarts, Harry’s journey will enchant and captivate you from the very first page.', 900.00, '1747050269_Harry Potter And SORCERERS STONE By J.K ROWLING 1.jpg', 'available', 3, NULL, 0, '2025-05-12 11:44:29'),
-(25, 'Harry Potter and the Chamber of Secrets part 2', 'J.K ROWLING', 'Harry Potter and the Chamber of Secrets plunges readers into a thrilling mystery as a dark force stalks the halls of Hogwarts. With danger lurking behind every corner and ancient secrets waiting to be uncovered, Harry must uncover the truth before the school is doomed.', 1000.00, '1747050425_2. Harry Potter and the Chamber of Secrets.jpg', 'available', 3, NULL, 0, '2025-05-12 11:47:05'),
-(26, 'Harry Potter and the Prisoner of Azkaban Part 3', 'J.K ROWLING', 'Harry Potter and the Prisoner of Azkaban delivers a gripping tale of suspense as a dangerous fugitive escapes from Azkaban, seemingly in pursuit of Harry. With dark secrets, time-turning twists, and shocking revelations, this third installment takes the magic—and the stakes—to a whole new level.', 1000.00, '1747050743_3. Harry Potter and the Prisoner of Azkaban.jpg', 'available', 3, NULL, 0, '2025-05-12 11:48:13'),
-(27, 'Harry Potter and the Goblet of Fire Part 4', 'J.K ROWLING', 'Harry Potter and the Goblet of Fire ignites with high-stakes magic as Harry is unexpectedly entered into the deadly Triwizard Tournament. Amid thrilling challenges and rising darkness, he faces the return of Lord Voldemort in a shocking twist that changes everything.', 900.00, '1747050545_4. Harry Potter and the Goblet of Fire.jpg', 'available', 2, NULL, 0, '2025-05-12 11:49:05'),
-(28, 'Harry Potter and the Order of the Phoenix Part 5', 'J.K ROWLING', 'Harry Potter and the Order of the Phoenix dives into a darker, more intense chapter as Harry battles disbelief, government interference, and haunting visions. With the rise of Voldemort denied by the Ministry, Harry and his friends form Dumbledore’s Army to fight back—and uncover powerful truths.', 900.00, '1747050604_5. Harry Potter and the Order of the Phoenix.jpg', 'available', 3, NULL, 0, '2025-05-12 11:50:04'),
-(29, 'Physics', 'Dharm Bahadur Rokaya', 'It  is a comprehensive guide designed to support students in understanding fundamental and advanced physics concepts. It features clear explanations, solved numerical problems, and exam-focused content tailored to the Nepali academic curriculum.', 200.00, '1747051595_Physics Dharm Bahadur Rokaya.jpg', 'available', 1, 6, 1, '2025-05-12 12:06:35'),
-(30, 'Old Book Question', 'Asmita Publication', 'Help for student', 200.00, '1747052177_OLD IS GOLD.jpg', 'available', 1, 3, 1, '2025-05-12 12:13:11'),
-(33, 'ssss', 'sss', 'ssss', 100.00, '1747098997_Screenshot 2025-05-04 190902.png', 'sold', 0, 2, 1, '2025-05-13 01:16:37'),
-(34, 'The Plague Dogs', 'Richard Adams', 'The Plague Dogs by Richard Adams is a powerful and emotional novel about two dogs, Rowf and Snitter, who escape from a cruel animal testing lab in England. As they struggle to survive in the wild, rumors spread that they carry the plague, turning them into hunted outcasts. Through their journey, the story explores themes of freedom, loyalty, and the ethics of animal experimentation.', 900.00, '1747099475_The Plague Dogs .jpg', 'available', 3, NULL, 0, '2025-05-13 01:24:35'),
-(35, 'Shardik', 'Richard Adams', 'Shardik by Richard Adams is a dark, epic fantasy about a giant bear believed to be a god, whose appearance changes the fate of an entire empire.', 900.00, '1747099561_Shardik.jpg', 'available', 3, NULL, 0, '2025-05-13 01:26:01'),
-(36, 'WaterShip Down', 'Richard Adams', 'Watership Down by Richard Adams is a classic adventure about a group of rabbits who flee their warren to find a new home, facing danger, leadership struggles, and survival along the way. It’s a moving tale of courage, freedom, and hope.', 800.00, '1747099691_WaterShip Down.jpg', 'available', 2, NULL, 0, '2025-05-13 01:28:11'),
-(37, 'This Cursed House', 'Del Sandeen', 'A haunted inheritance, deadly secrets, and a house that won’t let go—This Cursed House is a spine-tingling gothic thriller you won’t forget.', 900.00, '1747099796_This Cursed House.jpg', 'available', 3, NULL, 0, '2025-05-13 01:29:56'),
-(38, 'Intercepts', 'T.J. Payne', 'A mind-bending horror thriller about secret experiments, twisted science, and the terrifying cost of control—Intercepts will haunt you long after the final page', 900.00, '1747100435_Intercepts.jpg', 'available', 3, NULL, 0, '2025-05-13 01:40:35');
+INSERT INTO `books` (`id`, `title`, `author`, `description`, `price`, `image`, `status`, `quantity`, `added_by`, `is_old`, `category_id`, `created_at`) VALUES
+(24, 'Harry Potter and the Sorcerer’s Stone', 'J.K ROWLING', 'Harry Potter and the Sorcerer’s Stone is a spellbinding adventure that whisks readers into a hidden world of magic, mystery, and friendship. From discovering his true identity to facing dark forces at Hogwarts, Harry’s journey will enchant and captivate you from the very first page.', 900.00, '1747050269_Harry Potter And SORCERERS STONE By J.K ROWLING 1.jpg', 'available', 3, NULL, 0, 3, '2025-05-12 11:44:29'),
+(25, 'Harry Potter and the Chamber of Secrets part 2', 'J.K ROWLING', 'Harry Potter and the Chamber of Secrets plunges readers into a thrilling mystery as a dark force stalks the halls of Hogwarts. With danger lurking behind every corner and ancient secrets waiting to be uncovered, Harry must uncover the truth before the school is doomed.', 1000.00, '1747050425_2. Harry Potter and the Chamber of Secrets.jpg', 'available', 3, NULL, 0, 3, '2025-05-12 11:47:05'),
+(26, 'Harry Potter and the Prisoner of Azkaban Part 3', 'J.K ROWLING', 'Harry Potter and the Prisoner of Azkaban delivers a gripping tale of suspense as a dangerous fugitive escapes from Azkaban, seemingly in pursuit of Harry. With dark secrets, time-turning twists, and shocking revelations, this third installment takes the magic—and the stakes—to a whole new level.', 1000.00, '1747050743_3. Harry Potter and the Prisoner of Azkaban.jpg', 'available', 3, NULL, 0, 3, '2025-05-12 11:48:13'),
+(27, 'Harry Potter and the Goblet of Fire Part 4', 'J.K ROWLING', 'Harry Potter and the Goblet of Fire ignites with high-stakes magic as Harry is unexpectedly entered into the deadly Triwizard Tournament. Amid thrilling challenges and rising darkness, he faces the return of Lord Voldemort in a shocking twist that changes everything.', 900.00, '1747050545_4. Harry Potter and the Goblet of Fire.jpg', 'available', 1, NULL, 0, 3, '2025-05-12 11:49:05'),
+(28, 'Harry Potter and the Order of the Phoenix Part 5', 'J.K ROWLING', 'Harry Potter and the Order of the Phoenix dives into a darker, more intense chapter as Harry battles disbelief, government interference, and haunting visions. With the rise of Voldemort denied by the Ministry, Harry and his friends form Dumbledore’s Army to fight back—and uncover powerful truths.', 900.00, '1747050604_5. Harry Potter and the Order of the Phoenix.jpg', 'available', 3, NULL, 0, 3, '2025-05-12 11:50:04'),
+(29, 'Physics', 'Dharm Bahadur Rokaya', 'It  is a comprehensive guide designed to support students in understanding fundamental and advanced physics concepts. It features clear explanations, solved numerical problems, and exam-focused content tailored to the Nepali academic curriculum.', 200.00, '1747051595_Physics Dharm Bahadur Rokaya.jpg', 'available', 1, 6, 1, 4, '2025-05-12 12:06:35'),
+(30, 'Old Book Question', 'Asmita Publication', 'Help for student', 200.00, '1747052177_OLD IS GOLD.jpg', 'available', 1, 3, 1, 4, '2025-05-12 12:13:11'),
+(33, 'ssss', 'sss', 'ssss', 100.00, '1747098997_Screenshot 2025-05-04 190902.png', 'sold', 0, 2, 1, 1, '2025-05-13 01:16:37'),
+(34, 'The Plague Dogs', 'Richard Adams', 'The Plague Dogs by Richard Adams is a powerful and emotional novel about two dogs, Rowf and Snitter, who escape from a cruel animal testing lab in England. As they struggle to survive in the wild, rumors spread that they carry the plague, turning them into hunted outcasts. Through their journey, the story explores themes of freedom, loyalty, and the ethics of animal experimentation.', 900.00, '1747099475_The Plague Dogs .jpg', 'available', 3, NULL, 0, 6, '2025-05-13 01:24:35'),
+(35, 'Shardik', 'Richard Adams', 'Shardik by Richard Adams is a dark, epic fantasy about a giant bear believed to be a god, whose appearance changes the fate of an entire empire.', 900.00, '1747099561_Shardik.jpg', 'available', 3, NULL, 0, 1, '2025-05-13 01:26:01'),
+(36, 'WaterShip Down', 'Richard Adams', 'Watership Down by Richard Adams is a classic adventure about a group of rabbits who flee their warren to find a new home, facing danger, leadership struggles, and survival along the way. It’s a moving tale of courage, freedom, and hope.', 800.00, '1747099691_WaterShip Down.jpg', 'available', 2, NULL, 0, 1, '2025-05-13 01:28:11'),
+(37, 'This Cursed House', 'Del Sandeen', 'A haunted inheritance, deadly secrets, and a house that won’t let go—This Cursed House is a spine-tingling gothic thriller you won’t forget.', 900.00, '1747099796_This Cursed House.jpg', 'available', 3, NULL, 0, 6, '2025-05-13 01:29:56'),
+(38, 'Intercepts', 'T.J. Payne', 'A mind-bending horror thriller about secret experiments, twisted science, and the terrifying cost of control—Intercepts will haunt you long after the final page', 900.00, '1747100435_Intercepts.jpg', 'available', 3, NULL, 0, 6, '2025-05-13 01:40:35');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `categories`
+--
+
+CREATE TABLE `categories` (
+  `id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `categories`
+--
+
+INSERT INTO `categories` (`id`, `name`, `description`, `created_at`) VALUES
+(1, 'Fiction', 'Novels and stories that come from the imagination of the author rather than from fact.', '2025-05-19 00:25:23'),
+(2, 'Non-Fiction', 'Writing that is based on facts, real events, and real people.', '2025-05-19 00:25:23'),
+(3, 'Children\'s Books', 'Books specifically written for young readers.', '2025-05-19 00:25:23'),
+(4, 'Educational', 'Books intended to teach or provide learning resources.', '2025-05-19 00:25:23'),
+(5, 'Comics & Graphic Novels', 'Books that use sequential art combined with text to tell stories.', '2025-05-19 00:25:23'),
+(6, 'Horror', 'Books designed to frighten and cause feelings of dread and terror.', '2025-05-19 00:25:23');
 
 -- --------------------------------------------------------
 
@@ -169,7 +195,8 @@ INSERT INTO `orders` (`id`, `purchase_order_id`, `user_id`, `total_amount`, `pay
 (89, NULL, 6, 3000.00, 'cash', 'completed', 'completed', '2025-05-12 12:53:48', NULL),
 (90, NULL, 2, 3000.00, 'cash', 'completed', 'completed', '2025-05-12 13:05:25', NULL),
 (91, NULL, 6, 100.00, 'cash', 'completed', 'completed', '2025-05-13 01:17:52', NULL),
-(92, NULL, 3, 800.00, 'cash', 'completed', 'completed', '2025-05-13 01:42:57', NULL);
+(92, NULL, 3, 800.00, 'cash', 'completed', 'completed', '2025-05-13 01:42:57', NULL),
+(93, NULL, 2, 900.00, 'cash', 'pending', 'pending', '2025-05-18 23:54:05', NULL);
 
 -- --------------------------------------------------------
 
@@ -196,7 +223,8 @@ INSERT INTO `order_items` (`id`, `order_id`, `book_id`, `quantity`, `price`) VAL
 (90, 89, 25, 3, 1000.00),
 (91, 90, 25, 3, 1000.00),
 (92, 91, 33, 1, 100.00),
-(93, 92, 36, 1, 800.00);
+(93, 92, 36, 1, 800.00),
+(94, 93, 27, 1, 900.00);
 
 -- --------------------------------------------------------
 
@@ -257,7 +285,14 @@ INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `address`, `is_
 --
 ALTER TABLE `books`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `added_by` (`added_by`);
+  ADD KEY `added_by` (`added_by`),
+  ADD KEY `fk_books_category` (`category_id`);
+
+--
+-- Indexes for table `categories`
+--
+ALTER TABLE `categories`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `orders`
@@ -300,16 +335,22 @@ ALTER TABLE `books`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
+-- AUTO_INCREMENT for table `categories`
+--
+ALTER TABLE `categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
 
 --
 -- AUTO_INCREMENT for table `ratings`
@@ -331,7 +372,8 @@ ALTER TABLE `users`
 -- Constraints for table `books`
 --
 ALTER TABLE `books`
-  ADD CONSTRAINT `books_ibfk_1` FOREIGN KEY (`added_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `books_ibfk_1` FOREIGN KEY (`added_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_books_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `orders`
