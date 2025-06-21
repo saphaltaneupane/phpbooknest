@@ -12,14 +12,14 @@ if (!$sessionStarted) {
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
-ini_set('error_log', 'khalti_callback.log');
+ini_set('error_log', '../../logs/khalti_callback.log');
 
 // Force content type
 header('Content-Type: text/html; charset=utf-8');
 
 // Get database connection and functions
-require_once 'config/db.php';
-require_once 'includes/functions.php';
+require_once '../../config/db.php';
+require_once '../../includes/functions.php';
 
 // Log request data for debugging
 error_log("Khalti callback received: " . json_encode($_GET));
@@ -35,11 +35,11 @@ if (!isset($_GET['pidx'])) {
         unset($_SESSION['khalti_payment']);
         
         // Redirect to payment failure page
-        redirect("payment_success.php?order_id=$orderId&status=failed&message=" . urlencode("Missing payment verification data"));
+        redirect("../../payment_thankyou.php?order_id=$orderId&status=failed&message=" . urlencode("Missing payment verification data"));
     } else {
         // Clear session and redirect to home
         session_unset();
-        redirect("index.php");
+        redirect("../../index.php");
     }
     exit;
 }
@@ -65,7 +65,7 @@ if (!isset($_SESSION['khalti_payment']) || !isset($_SESSION['khalti_payment']['o
     } else {
         // No order found - redirect to home
         session_unset();
-        redirect("index.php");
+        redirect("../../index.php");
         exit;
     }
 } else {
@@ -103,7 +103,7 @@ if (curl_errno($ch)) {
     unset($_SESSION['khalti_payment']);
     
     // Redirect to payment failure page
-    redirect("payment_success.php?order_id=$orderId&status=failed&message=" . urlencode("Connection error: $error"));
+    redirect("../../payment_thankyou.php?order_id=$orderId&status=failed&message=" . urlencode("Connection error: $error"));
     exit;
 }
 
@@ -139,12 +139,19 @@ if ($statusCode === 200 && isset($responseData['status']) && $responseData['stat
             updateBookQuantity($bookId, $quantity);
             error_log("Updated book #$bookId inventory after payment verification");
         }
+
+        // ADD THIS SECTION TO CLEAR THE CART:
+        // Clear shopping cart after successful payment
+        if (isset($_SESSION['cart'])) {
+            unset($_SESSION['cart']);
+            error_log("Shopping cart cleared after successful payment");
+        }
         
         // Clear session data
         unset($_SESSION['khalti_payment']);
         
-        // Redirect to success page
-        redirect("payment_success.php?order_id=$orderId&status=success");
+        // Redirect to thank you page
+        redirect("../../payment_thankyou.php?order_id=$orderId&status=success");
     } else {
         // Database error
         $dbError = mysqli_error($conn);
@@ -154,7 +161,7 @@ if ($statusCode === 200 && isset($responseData['status']) && $responseData['stat
         unset($_SESSION['khalti_payment']);
         
         // Redirect to failure page
-        redirect("payment_success.php?order_id=$orderId&status=failed&message=" . urlencode("Database error: $dbError"));
+        redirect("../../payment_thankyou.php?order_id=$orderId&status=failed&message=" . urlencode("Database error: $dbError"));
     }
 } else {
     // Payment failed
@@ -165,6 +172,6 @@ if ($statusCode === 200 && isset($responseData['status']) && $responseData['stat
     unset($_SESSION['khalti_payment']);
     
     // Redirect to failure page
-    redirect("payment_success.php?order_id=$orderId&status=failed&message=" . urlencode("Payment status: $status"));
+    redirect("../../payment_thankyou.php?order_id=$orderId&status=failed&message=" . urlencode("Payment status: $status"));
 }
 ?>

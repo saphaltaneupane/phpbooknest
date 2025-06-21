@@ -189,6 +189,7 @@ foreach ($books as &$book) {
             <a href="users.php">Manage Users</a>
             <a href="books.php" class="active">Manage Books</a>
             <a href="add_book.php">Add New Book</a>
+            <a href="categories.php">Manage Categories</a>
             <a href="orders.php">Manage Orders</a>
         </div>
     </div>
@@ -216,6 +217,7 @@ foreach ($books as &$book) {
         
         <div>
             <a href="add_book.php" class="btn btn-primary">Add New Book</a>
+            <a href="categories.php" class="btn btn-primary">Manage Categories</a>
         </div>
         
         <?php if (empty($books)): ?>
@@ -228,6 +230,7 @@ foreach ($books as &$book) {
                             <th>ID</th>
                             <th>Title</th>
                             <th>Author</th>
+                            <th>Category</th>
                             <th>Price</th>
                             <th>Status</th>
                             <th>Type</th>
@@ -236,39 +239,45 @@ foreach ($books as &$book) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($books as $book): ?>
-                            <tr>
-                                <td><?php echo $book['id']; ?></td>
-                                <td><?php echo $book['title']; ?></td>
-                                <td><?php echo $book['author']; ?></td>
-                                <td>Rs. <?php echo $book['price']; ?></td>
-                                <td>
-                                    <span class="badge badge-<?php echo $book['status'] === 'available' ? 'success' : ($book['status'] === 'pending' ? 'warning' : 'secondary'); ?>">
-                                        <?php echo ucfirst($book['status']); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo $book['is_old'] ? 'Used' : 'New'; ?></td>
-                                <td><?php echo $book['added_by_name'] ? $book['added_by_name'] : 'Admin'; ?></td>
-                                <td>
-                                    <a href="edit_book.php?id=<?php echo $book['id']; ?>" 
-                                       class="btn btn-primary btn-sm <?php echo ($book['is_old'] && $book['status'] === 'sold') ? 'disabled' : ''; ?>">
-                                       Edit
-                                    </a>
-                                    
-                                    <?php if ($book['status'] === 'pending' && $book['is_old']): ?>
-                                        <a href="approve_book.php?id=<?php echo $book['id']; ?>&action=approve" 
-                                           class="btn btn-success btn-sm" 
-                                           onclick="return confirm('Are you sure you want to approve this book?')">Approve</a>
-                                        <a href="approve_book.php?id=<?php echo $book['id']; ?>&action=reject" 
-                                           class="btn btn-danger btn-sm" 
-                                           onclick="return confirm('Are you sure you want to reject this book?')">Reject</a>
-                                    <?php endif; ?>
-                                    
-                                    <a href="delete_book.php?id=<?php echo $book['id']; ?>" 
+                        <?php foreach ($books as $book): 
+                            // Get category name
+                            $categoryQuery = "SELECT name FROM categories WHERE id = " . (int)$book['category_id'];
+                            $categoryResult = mysqli_query($conn, $categoryQuery);
+                            $categoryName = mysqli_fetch_assoc($categoryResult)['name'] ?? 'Uncategorized';
+                        ?>
+                        <tr>
+                            <td><?php echo $book['id']; ?></td>
+                            <td><?php echo $book['title']; ?></td>
+                            <td><?php echo $book['author']; ?></td>
+                            <td><?php echo $categoryName; ?></td>
+                            <td>Rs. <?php echo $book['price']; ?></td>
+                            <td>
+                                <span class="badge badge-<?php echo $book['status'] === 'available' ? 'success' : ($book['status'] === 'pending' ? 'warning' : 'secondary'); ?>">
+                                    <?php echo ucfirst($book['status']); ?>
+                                </span>
+                            </td>
+                            <td><?php echo $book['is_old'] ? 'Used' : 'New'; ?></td>
+                            <td><?php echo $book['added_by_name'] ? $book['added_by_name'] : 'Admin'; ?></td>
+                            <td>
+                                <a href="edit_book.php?id=<?php echo $book['id']; ?>" 
+                                   class="btn btn-primary btn-sm <?php echo ($book['is_old'] && $book['status'] === 'sold') ? 'disabled' : ''; ?>">
+                                   Edit
+                                </a>
+                                
+                                <?php if ($book['status'] === 'pending' && $book['is_old']): ?>
+                                    <a href="approve_book.php?id=<?php echo $book['id']; ?>&action=approve" 
+                                       class="btn btn-success btn-sm" 
+                                       onclick="return confirm('Are you sure you want to approve this book?')">Approve</a>
+                                    <a href="approve_book.php?id=<?php echo $book['id']; ?>&action=reject" 
                                        class="btn btn-danger btn-sm" 
-                                       onclick="return confirm('Are you sure you want to delete this book?')">Delete</a>
-                                </td>
-                            </tr>
+                                       onclick="return confirm('Are you sure you want to reject this book?')">Reject</a>
+                                <?php endif; ?>
+                                
+                                <a href="delete_book.php?id=<?php echo $book['id']; ?>" 
+                                   class="btn btn-danger btn-sm" 
+                                   onclick="return confirm('Are you sure you want to delete this book?')">Delete</a>
+                            </td>
+                        </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>

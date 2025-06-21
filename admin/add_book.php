@@ -411,6 +411,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a href="users.php" class="menu-link">Manage Users</a>
             <a href="books.php" class="menu-link">Manage Books</a>
             <a href="add_book.php" class="menu-link active">Add New Book</a>
+            <a href="categories.php" class="menu-link">Manage Categories</a>
             <a href="orders.php" class="menu-link">Manage Orders</a>
         </div>
     </div>
@@ -459,6 +460,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php if (isset($errors['category'])): ?>
                             <div class="error-feedback"><?php echo $errors['category']; ?></div>
                         <?php endif; ?>
+                        <div class="form-text">
+                            <a href="categories.php">Manage categories</a> if you need to add a new category.
+                        </div>
                     </div>
                     
                     <div class="form-group">

@@ -1,0 +1,12 @@
+# Redirect malformed Khalti callback URLs
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect original path format (for backward compatibility)
+    RewriteCond %{THE_REQUEST} /C:/xampp/htdocs/booktrading/khalti_callback\.php [NC]
+    RewriteRule ^ payment/khalti/redirector.php?%{QUERY_STRING} [L,R=302]
+    
+    # Redirect new path format
+    RewriteCond %{THE_REQUEST} /C:/xampp/htdocs/booktrading/payment/khalti/callback\.php [NC]
+    RewriteRule ^ payment/khalti/redirector.php?%{QUERY_STRING} [L,R=302]
+</IfModule>

@@ -112,8 +112,8 @@ foreach ($books as $book) {
     
     .container {
         width: 100%;
-        padding-right: 15px;
-        padding-left: 15px;
+        padding-right: 5px;  /* Reduced from 15px */
+        padding-left: 5px;   /* Reduced from 15px */
         margin-right: auto;
         margin-left: auto;
         max-width: 1140px;
@@ -458,11 +458,11 @@ foreach ($books as $book) {
                                 $avgRating = isset($book['avg_rating']) ? $book['avg_rating'] : 0;
                                 for ($i = 1; $i <= 5; $i++) {
                                     if ($i <= $avgRating) {
-                                        echo '<i class="bi bi-star-fill"></i>';
+                                        echo '★';
                                     } else if ($i <= $avgRating + 0.5) {
-                                        echo '<i class="bi bi-star-half"></i>';
+                                        echo '⯪';
                                     } else {
-                                        echo '<i class="bi bi-star"></i>';
+                                        echo '☆';
                                     }
                                 }
                                 ?>
@@ -538,11 +538,11 @@ foreach ($books as $book) {
                                                 $rating = getBookRating($book['id']);
                                                 for ($i = 1; $i <= 5; $i++) {
                                                     if ($i <= $rating) {
-                                                        echo '<i class="bi bi-star-fill"></i>';
+                                                        echo '★';
                                                     } else if ($i <= $rating + 0.5) {
-                                                        echo '<i class="bi bi-star-half"></i>';
+                                                        echo '⯪';
                                                     } else {
-                                                        echo '<i class="bi bi-star"></i>';
+                                                        echo '☆';
                                                     }
                                                 }
                                                 ?>

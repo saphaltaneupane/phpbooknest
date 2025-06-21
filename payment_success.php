@@ -16,6 +16,11 @@ if ($orderId <= 0) {
     redirect('index.php');
 }
 
+// Clear cart after successful payment
+if (isset($_SESSION['cart'])) {
+    unset($_SESSION['cart']);
+}
+
 // Get order details
 $query = "SELECT o.*, u.name as user_name FROM orders o 
           JOIN users u ON o.user_id = u.id 

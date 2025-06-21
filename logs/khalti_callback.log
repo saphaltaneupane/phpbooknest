@@ -1,0 +1,46 @@
+[25-May-2025 14:07:09 Europe/Berlin] Khalti callback received: {"order_id":"107\/?status=Completed","t":"txn","idx":"gwhHznaXhrVV7nMSwY6tcY","token":"bs6Z66jZJWMuEU8oaaSGw5","bank_reference":"None","amount":"10000","mobile":"98XXXXX001","transaction_id":"gwhHznaXhrVV7nMSwY6tcY","tidx":"gwhHznaXhrVV7nMSwY6tcY","total_amount":"10000","purchase_order_id":"ORDER-1748174813-107","purchase_order_name":"sss","pidx":"NUVwqSDLo2cAkFzPYrJbuW"}
+[25-May-2025 14:07:09 Europe/Berlin] Session state: {"pidx":"NUVwqSDLo2cAkFzPYrJbuW","order_id":107,"purchase_order_id":"ORDER-1748174813-107","initiated_at":1748174813}
+[25-May-2025 14:07:09 Europe/Berlin] Processing payment with pidx: NUVwqSDLo2cAkFzPYrJbuW
+[25-May-2025 14:07:09 Europe/Berlin] Found order_id in session: 107
+[25-May-2025 14:07:09 Europe/Berlin] Khalti Verification Response (HTTP 200): {"pidx":"NUVwqSDLo2cAkFzPYrJbuW","total_amount":10000,"status":"Completed","transaction_id":"gwhHznaXhrVV7nMSwY6tcY","fee":300,"refunded":false}
+[25-May-2025 14:07:09 Europe/Berlin] Payment successful. Transaction ID: gwhHznaXhrVV7nMSwY6tcY
+[25-May-2025 14:07:09 Europe/Berlin] Order status updated successfully
+[25-May-2025 14:07:09 Europe/Berlin] Updating book quantity: Book ID=48, Quantity=1
+[25-May-2025 14:07:09 Europe/Berlin] Updated book #48 inventory after payment verification
+[25-May-2025 14:09:35 Europe/Berlin] Khalti callback received: {"order_id":"109\/?status=Completed","t":"txn","idx":"UzrocyZkEyZF9QHvRvciGZ","token":"p6QJuYkcuJtSRA835Dp5Um","bank_reference":"None","amount":"10000","mobile":"98XXXXX001","transaction_id":"UzrocyZkEyZF9QHvRvciGZ","tidx":"UzrocyZkEyZF9QHvRvciGZ","total_amount":"10000","purchase_order_id":"ORDER-1748174959-109","purchase_order_name":"aaaa","pidx":"MB8CWk7fKAhcouj68Zvv2R"}
+[25-May-2025 14:09:35 Europe/Berlin] Session state: {"pidx":"MB8CWk7fKAhcouj68Zvv2R","order_id":109,"purchase_order_id":"ORDER-1748174959-109","initiated_at":1748174960}
+[25-May-2025 14:09:35 Europe/Berlin] Processing payment with pidx: MB8CWk7fKAhcouj68Zvv2R
+[25-May-2025 14:09:35 Europe/Berlin] Found order_id in session: 109
+[25-May-2025 14:09:35 Europe/Berlin] Khalti Verification Response (HTTP 200): {"pidx":"MB8CWk7fKAhcouj68Zvv2R","total_amount":10000,"status":"Completed","transaction_id":"UzrocyZkEyZF9QHvRvciGZ","fee":300,"refunded":false}
+[25-May-2025 14:09:35 Europe/Berlin] Payment successful. Transaction ID: UzrocyZkEyZF9QHvRvciGZ
+[25-May-2025 14:09:35 Europe/Berlin] Order status updated successfully
+[25-May-2025 14:09:35 Europe/Berlin] Updating book quantity: Book ID=47, Quantity=1
+[25-May-2025 14:09:35 Europe/Berlin] Updated book #47 inventory after payment verification
+[25-May-2025 14:36:17 Europe/Berlin] Khalti callback received: {"order_id":"110\/?status=Completed","t":"txn","idx":"Cuan6Yn4nCXCsCC72pTaSM","token":"pSwrx2nSj4bvatbKcznqrW","bank_reference":"None","amount":"10000","mobile":"98XXXXX001","transaction_id":"Cuan6Yn4nCXCsCC72pTaSM","tidx":"Cuan6Yn4nCXCsCC72pTaSM","total_amount":"10000","purchase_order_id":"ORDER-1748176564-110","purchase_order_name":"aaaaa","pidx":"C68fCEpiv8R4WuiwMvTgyV"}
+[25-May-2025 14:36:17 Europe/Berlin] Session state: {"pidx":"C68fCEpiv8R4WuiwMvTgyV","order_id":110,"purchase_order_id":"ORDER-1748176564-110","initiated_at":1748176565}
+[25-May-2025 14:36:17 Europe/Berlin] Processing payment with pidx: C68fCEpiv8R4WuiwMvTgyV
+[25-May-2025 14:36:17 Europe/Berlin] Found order_id in session: 110
+[25-May-2025 14:36:17 Europe/Berlin] Khalti Verification Response (HTTP 200): {"pidx":"C68fCEpiv8R4WuiwMvTgyV","total_amount":10000,"status":"Completed","transaction_id":"Cuan6Yn4nCXCsCC72pTaSM","fee":300,"refunded":false}
+[25-May-2025 14:36:17 Europe/Berlin] Payment successful. Transaction ID: Cuan6Yn4nCXCsCC72pTaSM
+[25-May-2025 14:36:17 Europe/Berlin] Order status updated successfully
+[25-May-2025 14:36:18 Europe/Berlin] Updating book quantity: Book ID=51, Quantity=1
+[25-May-2025 14:36:18 Europe/Berlin] Updated book #51 inventory after payment verification
+[25-May-2025 14:46:17 Europe/Berlin] Khalti callback received: {"order_id":"112\/?status=Completed","t":"txn","idx":"8CwnnCSAhd8UYvLVGAFSSG","token":"Mks3TmvHkgxAhrrhmQTKzU","bank_reference":"None","amount":"10000","mobile":"98XXXXX001","transaction_id":"8CwnnCSAhd8UYvLVGAFSSG","tidx":"8CwnnCSAhd8UYvLVGAFSSG","total_amount":"10000","purchase_order_id":"ORDER-1748177152-112","purchase_order_name":"wwww","pidx":"TCAgZLA2rBYhhjg24wAuQ2"}
+[25-May-2025 14:46:17 Europe/Berlin] Session state: {"pidx":"TCAgZLA2rBYhhjg24wAuQ2","order_id":112,"purchase_order_id":"ORDER-1748177152-112","initiated_at":1748177152}
+[25-May-2025 14:46:17 Europe/Berlin] Processing payment with pidx: TCAgZLA2rBYhhjg24wAuQ2
+[25-May-2025 14:46:17 Europe/Berlin] Found order_id in session: 112
+[25-May-2025 14:46:17 Europe/Berlin] Khalti Verification Response (HTTP 200): {"pidx":"TCAgZLA2rBYhhjg24wAuQ2","total_amount":10000,"status":"Completed","transaction_id":"8CwnnCSAhd8UYvLVGAFSSG","fee":300,"refunded":false}
+[25-May-2025 14:46:17 Europe/Berlin] Payment successful. Transaction ID: 8CwnnCSAhd8UYvLVGAFSSG
+[25-May-2025 14:46:17 Europe/Berlin] Order status updated successfully
+[25-May-2025 14:46:17 Europe/Berlin] Updating book quantity: Book ID=55, Quantity=1
+[25-May-2025 14:46:17 Europe/Berlin] Updated book #55 inventory after payment verification
+[25-May-2025 15:02:07 Europe/Berlin] Khalti callback received: {"order_id":"113\/?status=Completed","t":"txn","idx":"J3rqAJAsGtmgMcNKdC2ek9","token":"KUbZcxa6VEKXuz5VgUMjLF","bank_reference":"None","amount":"10000","mobile":"98XXXXX001","transaction_id":"J3rqAJAsGtmgMcNKdC2ek9","tidx":"J3rqAJAsGtmgMcNKdC2ek9","total_amount":"10000","purchase_order_id":"ORDER-1748178113-113","purchase_order_name":"eee","pidx":"Mw6WjjaKBq6KWYRXtCMN9G"}
+[25-May-2025 15:02:07 Europe/Berlin] Session state: {"pidx":"Mw6WjjaKBq6KWYRXtCMN9G","order_id":113,"purchase_order_id":"ORDER-1748178113-113","initiated_at":1748178113}
+[25-May-2025 15:02:07 Europe/Berlin] Processing payment with pidx: Mw6WjjaKBq6KWYRXtCMN9G
+[25-May-2025 15:02:07 Europe/Berlin] Found order_id in session: 113
+[25-May-2025 15:02:07 Europe/Berlin] Khalti Verification Response (HTTP 200): {"pidx":"Mw6WjjaKBq6KWYRXtCMN9G","total_amount":10000,"status":"Completed","transaction_id":"J3rqAJAsGtmgMcNKdC2ek9","fee":300,"refunded":false}
+[25-May-2025 15:02:07 Europe/Berlin] Payment successful. Transaction ID: J3rqAJAsGtmgMcNKdC2ek9
+[25-May-2025 15:02:07 Europe/Berlin] Order status updated successfully
+[25-May-2025 15:02:07 Europe/Berlin] Updating book quantity: Book ID=54, Quantity=1
+[25-May-2025 15:02:07 Europe/Berlin] Updated book #54 inventory after payment verification
+[25-May-2025 15:02:07 Europe/Berlin] Shopping cart cleared after successful payment

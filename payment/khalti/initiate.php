@@ -8,18 +8,18 @@ if (!$sessionStarted) {
     session_start();
 }
 
-require_once 'config/db.php';
-require_once 'includes/functions.php';
+require_once '../../config/db.php';
+require_once '../../includes/functions.php';
 
 // Setup error logging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
-ini_set('error_log', 'khalti_initiate.log');
+ini_set('error_log', '../../logs/khalti_initiate.log');
 
 // Check if user is logged in
 if (!isLoggedIn()) {
-    redirect('login.php');
+    redirect('../../login.php');
     exit;
 }
 
@@ -29,7 +29,7 @@ $amount = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
 
 // Validate input
 if ($orderId <= 0 || $amount <= 0) {
-    echo "<p>Invalid order information. <a href='index.php'>Return to homepage</a>.</p>";
+    echo "<p>Invalid order information. <a href='../../index.php'>Return to homepage</a>.</p>";
     exit;
 }
 
@@ -39,7 +39,7 @@ $userQuery = "SELECT * FROM users WHERE id = $userId";
 $userResult = mysqli_query($conn, $userQuery);
 
 if (!$userResult || mysqli_num_rows($userResult) === 0) {
-    echo "<p>Could not find user information. <a href='index.php'>Return to homepage</a>.</p>";
+    echo "<p>Could not find user information. <a href='../../index.php'>Return to homepage</a>.</p>";
     exit;
 }
 
@@ -51,7 +51,7 @@ $purchaseOrderId = 'ORDER-' . time() . '-' . $orderId;
 // Update order with this purchase order ID
 $updateQuery = "UPDATE orders SET purchase_order_id = '$purchaseOrderId' WHERE id = $orderId";
 if (!mysqli_query($conn, $updateQuery)) {
-    echo "<p>Database error: " . mysqli_error($conn) . " <a href='index.php'>Return to homepage</a>.</p>";
+    echo "<p>Database error: " . mysqli_error($conn) . " <a href='../../index.php'>Return to homepage</a>.</p>";
     exit;
 }
 
@@ -77,14 +77,9 @@ if ($itemsResult && mysqli_num_rows($itemsResult) > 0) {
 // Convert amount to paisa (Khalti requires amount in paisa)
 $amountInPaisa = (int)($amount * 100);
 
-// Get current domain and path for URLs
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
-$host = $_SERVER['HTTP_HOST'];
-$basePath = dirname($_SERVER['PHP_SELF']);
-
-// Create a proper return URL
-$returnUrl = $protocol . $host . $basePath . "/khalti_callback.php";
-$websiteUrl = $protocol . $host . $basePath;
+// Use absolute URL with correct domain for return_url
+$returnUrl = "http://localhost/booktrading/payment/khalti/callback.php?order_id=$orderId";
+$websiteUrl = "http://localhost/booktrading";
 
 // Log the return URL for debugging
 error_log("Return URL: $returnUrl");
@@ -125,7 +120,7 @@ $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 if (curl_errno($ch)) {
     $error = curl_error($ch);
     error_log("cURL Error: $error");
-    echo "<p>Connection error: $error <a href='index.php'>Return to homepage</a>.</p>";
+    echo "<p>Connection error: $error <a href='../../index.php'>Return to homepage</a>.</p>";
     exit;
 }
 
@@ -140,7 +135,7 @@ if ($statusCode === 200) {
     $responseData = json_decode($response, true);
     
     if (!isset($responseData['payment_url']) || !isset($responseData['pidx'])) {
-        echo "<p>Invalid response from payment gateway. <a href='index.php'>Return to homepage</a>.</p>";
+        echo "<p>Invalid response from payment gateway. <a href='../../index.php'>Return to homepage</a>.</p>";
         exit;
     }
     
@@ -160,7 +155,7 @@ if ($statusCode === 200) {
     $responseData = json_decode($response, true);
     $errorMessage = isset($responseData['detail']) ? $responseData['detail'] : 'Unknown error';
     
-    echo "<p>Payment initiation failed: $errorMessage <a href='index.php'>Return to homepage</a>.</p>";
+    echo "<p>Payment initiation failed: $errorMessage <a href='../../index.php'>Return to homepage</a>.</p>";
     exit;
 }
 ?>

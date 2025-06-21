@@ -480,6 +480,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
                     <li><a href="users.php">Manage Users</a></li>
                     <li><a href="books.php">Manage Books</a></li>
                     <li><a href="add_book.php">Add New Book</a></li>
+                    <li><a href="categories.php">Manage Categories</a></li>
                     <li><a href="orders.php" class="active">Manage Orders</a></li>
                 </ul>
             </div>

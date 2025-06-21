@@ -22,6 +22,16 @@ if (!$book) {
 $errors = [];
 $success = false;
 
+// Get all categories for the dropdown
+$categoriesQuery = "SELECT * FROM categories ORDER BY name";
+$categoriesResult = mysqli_query($conn, $categoriesQuery);
+$categories = [];
+if ($categoriesResult && mysqli_num_rows($categoriesResult) > 0) {
+    while ($row = mysqli_fetch_assoc($categoriesResult)) {
+        $categories[] = $row;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get form data
     $title = sanitize($_POST['title']);
@@ -33,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($quantity < 0) {
         $quantity = 0;
     }
+    $categoryId = isset($_POST['category_id']) ? (int)$_POST['category_id'] : $book['category_id'];
     
     // FIXED: Auto-update status to 'available' if quantity was increased from 0
     if ($book['quantity'] == 0 && $quantity > 0) {
@@ -52,6 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['price'] = 'Price is required';
     } elseif (!is_numeric($price) || $price <= 0) {
         $errors['price'] = 'Price must be a positive number';
+    }
+    
+    // Validate category
+    if (empty($categoryId)) {
+        $errors['category'] = 'Please select a category';
     }
     
     // Handle image upload
@@ -90,8 +106,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // If no errors, update book in database
     if (empty($errors)) {
-        $query = "UPDATE books SET title = '$title', author = '$author', description = '$description', 
-                  price = '$price', image = '$targetFile', status = '$status', quantity = $quantity
+        $query = "UPDATE books SET 
+                  title = '$title', 
+                  author = '$author', 
+                  description = '$description',
+                  price = '$price', 
+                  image = '$targetFile', 
+                  status = '$status', 
+                  quantity = $quantity,
+                  category_id = $categoryId
                   WHERE id = $bookId";
         
         if (mysqli_query($conn, $query)) {
@@ -317,11 +340,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="users.php" class="list-group-item">Manage Users</a>
                 <a href="books.php" class="list-group-item active">Manage Books</a>
                 <a href="add_book.php" class="list-group-item">Add New Book</a>
+                <a href="categories.php" class="list-group-item">Manage Categories</a>
                 <a href="orders.php" class="list-group-item">Manage Orders</a>
             </div>
         </div>
     </div>
-    
     <div class="col-md-9">
         <div class="card">
             <div class="card-header bg-primary text-white">
@@ -329,91 +352,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="card-body">
                 <?php if ($success): ?>
-                    <div class="alert alert-success">
-                        Book updated successfully!
-                        <?php if ($book['quantity'] > 0 && $book['status'] === 'available'): ?>
-                            The book is now available on the homepage.
-                        <?php endif; ?>
-                    </div>
+                <div class="alert alert-success">
+                    Book updated successfully!
+                    <?php if ($book['quantity'] > 0 && $book['status'] === 'available'): ?>
+                    The book is now available on the homepage.
+                    <?php endif; ?>
+                </div>
                 <?php endif; ?>
-                
                 <?php if (isset($errors['general'])): ?>
-                    <div class="alert alert-danger"><?php echo $errors['general']; ?></div>
+                <div class="alert alert-danger"><?php echo $errors['general']; ?></div>
                 <?php endif; ?>
-                
                 <form action="edit_book.php?id=<?php echo $bookId; ?>" method="POST" enctype="multipart/form-data" novalidate>
                     <div class="mb-3">
                         <label for="title" class="form-label">Book Title</label>
                         <input type="text" class="form-control <?php echo isset($errors['title']) ? 'is-invalid' : ''; ?>" id="title" name="title" value="<?php echo $book['title']; ?>" required>
                         <?php if (isset($errors['title'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['title']; ?></div>
+                        <div class="invalid-feedback"><?php echo $errors['title']; ?></div>
                         <?php endif; ?>
                     </div>
-                    
                     <div class="mb-3">
                         <label for="author" class="form-label">Author</label>
                         <input type="text" class="form-control <?php echo isset($errors['author']) ? 'is-invalid' : ''; ?>" id="author" name="author" value="<?php echo $book['author']; ?>" required>
                         <?php if (isset($errors['author'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['author']; ?></div>
+                        <div class="invalid-feedback"><?php echo $errors['author']; ?></div>
                         <?php endif; ?>
                     </div>
-                    
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select <?php echo isset($errors['category']) ? 'is-invalid' : ''; ?>" id="category_id" name="category_id" required>
+                            <option value="">-- Select Category --</option>
+                            <?php foreach ($categories as $category): ?>
+                            <option value="<?php echo $category['id']; ?>" <?php echo $book['category_id'] == $category['id'] ? 'selected' : ''; ?>>
+                                <?php echo $category['name']; ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if (isset($errors['category'])): ?>
+                        <div class="invalid-feedback"><?php echo $errors['category']; ?></div>
+                        <?php endif; ?>
+                    </div>
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="4"><?php echo $book['description']; ?></textarea>
                     </div>
-                    
                     <div class="mb-3">
                         <label for="price" class="form-label">Price (in Rs.)</label>
                         <input type="number" class="form-control <?php echo isset($errors['price']) ? 'is-invalid' : ''; ?>" id="price" name="price" value="<?php echo $book['price']; ?>" min="1" step="1" required>
                         <?php if (isset($errors['price'])): ?>
-                            <div class="invalid-feedback"><?php echo $errors['price']; ?></div>
+                        <div class="invalid-feedback"><?php echo $errors['price']; ?></div>
                         <?php endif; ?>
                     </div>
-                    
-                <div class="mb-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="available" <?php echo $book['status'] === 'available' ? 'selected' : ''; ?>>Available</option>
-                        <option value="pending" <?php echo $book['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                        <option value="sold" <?php echo $book['status'] === 'sold' ? 'selected' : ''; ?>>Sold</option>
-                    </select>
-                    <small class="text-muted">
-                        Note: When restocking a sold-out book (increasing quantity from 0),
-                        the status will automatically be changed to "Available".
-                    </small>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="quantity" class="form-label">Quantity</label>
-                    <input type="number" class="form-control" id="quantity" name="quantity" value="<?php echo $book['quantity']; ?>" min="0" required>
-                    <small class="text-muted">Set to 0 to mark as unavailable/sold out</small>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Current Image</label>
-                    <div>
-                        <img src="<?php echo $relativePath; ?>assets/images/<?php echo $book['image']; ?>" class="img-thumbnail" style="max-width: 200px;" alt="<?php echo $book['title']; ?>">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="available" <?php echo $book['status'] === 'available' ? 'selected' : ''; ?>>Available</option>
+                            <option value="pending" <?php echo $book['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                            <option value="sold" <?php echo $book['status'] === 'sold' ? 'selected' : ''; ?>>Sold</option>
+                        </select>
+                        <small class="text-muted">
+                            Note: When restocking a sold-out book (increasing quantity from 0),
+                            the status will automatically be changed to "Available".
+                        </small>
                     </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="image" class="form-label">Change Image</label>
-                    <input type="file" class="form-control <?php echo isset($errors['image']) ? 'is-invalid' : ''; ?>" id="image" name="image">
-                    <small class="text-muted">Upload a new image for the book (optional). Max size: 5MB. Supported formats: JPG, JPEG, PNG, GIF.</small>
-                    <?php if (isset($errors['image'])): ?>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" value="<?php echo $book['quantity']; ?>" min="0" required>
+                        <small class="text-muted">Set to 0 to mark as unavailable/sold out</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Image</label>
+                        <div>
+                            <img src="<?php echo $relativePath; ?>assets/images/<?php echo $book['image']; ?>" class="img-thumbnail" style="max-width: 200px;" alt="<?php echo $book['title']; ?>">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Change Image</label>
+                        <input type="file" class="form-control <?php echo isset($errors['image']) ? 'is-invalid' : ''; ?>" id="image" name="image">
+                        <small class="text-muted">Upload a new image for the book (optional). Max size: 5MB. Supported formats: JPG, JPEG, PNG, GIF.</small>
+                        <?php if (isset($errors['image'])): ?>
                         <div class="invalid-feedback"><?php echo $errors['image']; ?></div>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="d-flex justify-content-between">
-                    <a href="books.php" class="btn btn-secondary">Back</a>
-                    <button type="submit" class="btn btn-primary">Update Book</button>
-                </div>
-            </form>
+                        <?php endif; ?>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="books.php" class="btn btn-secondary">Back</a>
+                        <button type="submit" class="btn btn-primary">Update Book</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
-</div>
-
 <?php require_once $relativePath . 'includes/footer.php'; ?>

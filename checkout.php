@@ -1,18 +1,61 @@
 <?php
-require_once 'includes/header.php';
-
-// Redirect if not logged in
-if (!isLoggedIn()) {
-    // Save current URL as return destination
-    $_SESSION['redirect_after_login'] = 'checkout.php';
-    redirect('login.php?redirect=checkout');
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
 }
 
-// Redirect if cart is empty
+require_once 'includes/functions.php'; // <-- Add this line to ensure isLoggedIn() is available
+
+// Ensure database connection is available
+$conn = mysqli_connect("localhost", "root", "", "booktrading");
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+// Remove unavailable items from cart before proceeding
+if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
+    $unavailableItems = [];
+    foreach ($_SESSION['cart'] as $key => $item) {
+        $bookId = $item['book_id'];
+        $quantity = $item['quantity'];
+        $query = "SELECT quantity, status FROM books WHERE id = $bookId";
+        $result = mysqli_query($conn, $query);
+        if ($result && mysqli_num_rows($result) > 0) {
+            $book = mysqli_fetch_assoc($result);
+            if ($book['status'] !== 'available' || $book['quantity'] < $quantity) {
+                $unavailableItems[] = $item['title'];
+                unset($_SESSION['cart'][$key]);
+            }
+        } else {
+            unset($_SESSION['cart'][$key]);
+        }
+    }
+    if (!empty($unavailableItems)) {
+        $_SESSION['cart'] = array_values($_SESSION['cart']);
+        $_SESSION['checkout_error'] = "The following items have been removed from your cart as they are no longer available: " . implode(", ", $unavailableItems);
+    }
+}
+
+// Redirect to cart page if cart is empty
 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
-    $_SESSION['cart_message'] = 'Your cart is empty. Please add some items before checkout.';
     redirect('cart.php');
 }
+
+$error = null;
+
+// Check if user is logged in
+if (!isLoggedIn()) {
+    header("Location: login.php?redirect=checkout");
+    exit();
+}
+
+// Check if cart is empty
+if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+    header("Location: cart.php");
+    exit();
+}
+
+require_once 'includes/header.php';
 
 // Get user details
 $userId = $_SESSION['user_id'];
@@ -89,18 +132,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // If no errors inserting items, process payment
             if (!$insertError) {
-                // Clear cart
-                $_SESSION['cart'] = [];
-                
                 // Redirect based on payment method
                 if ($paymentMethod === 'cash') {
+                    // Clear cart
+                    $_SESSION['cart'] = [];
                     $_SESSION['success_message'] = 'Order placed successfully! Your order will be delivered soon.';
                     redirect('payment_success.php?order_id=' . $orderId);
                 } else {
                     // For Khalti payment, initialize payment and redirect
                     $_SESSION['order_id'] = $orderId;
                     $_SESSION['amount'] = $totalAmount;
-                    redirect('khalti_payment.php');
+
+                    // Try new path first, fall back to original path
+                    if (file_exists('payment/khalti/payment.php')) {
+                        redirect('payment/khalti/payment.php');
+                    } else {
+                        $khaltiPaymentUrl = 'http://localhost/booktrading/khalti_payment.php'; // Use original file for now
+                        redirect($khaltiPaymentUrl);
+                    }
                 }
             } else {
                 // If error occurred after order was created, delete the order
@@ -319,6 +368,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <?php if (isset($error)): ?>
         <div class="alert alert-danger"><?php echo $error; ?></div>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['checkout_error'])): ?>
+        <div class="alert alert-danger">
+            <?php echo $_SESSION['checkout_error']; unset($_SESSION['checkout_error']); ?>
+        </div>
     <?php endif; ?>
     
     <form action="checkout.php" method="POST">
